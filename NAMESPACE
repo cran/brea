@@ -1,0 +1,3 @@
+# Export all names
+exportPattern(".")
+importFrom("stats", "dnorm", "rWishart", "rgamma", "rnorm", "runif")
