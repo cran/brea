@@ -1,3 +1,2 @@
-# Export all names
-exportPattern(".")
+export("brea_mcmc")
 importFrom("stats", "dnorm", "rWishart", "rgamma", "rnorm", "runif")
