@@ -1,12 +1,12 @@
 Package: brea
-Version: 0.2.0
-Date: 2017-10-08
-Title: Bayesian Recurrent Event Analysis
-Description: A function to produce MCMC samples for posterior inference in semiparametric Bayesian discrete time competing risks recurrent events models.
+Version: 0.3.0
+Date: 2024-07-01
+Title: Bayesian Recurrent Events Analysis
+Description: Functions to produce MCMC samples for posterior inference in semiparametric Bayesian discrete time competing risks recurrent events models and multistate models.
 Author: Adam J King
 Maintainer: Adam J King <king@cpp.edu>
 License: GPL-3
 NeedsCompilation: no
-Packaged: 2017-10-09 03:39:39 UTC; adam
+Packaged: 2024-07-02 05:44:30 UTC; adam
 Repository: CRAN
-Date/Publication: 2017-10-09 03:49:15 UTC
+Date/Publication: 2024-07-02 07:30:05 UTC

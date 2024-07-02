@@ -39,7 +39,7 @@ check_set_priors <- function(priors,M,R) {
       # name the parameters:
       names(priors[[m]]) <- c("type","sd","tau")
       
-    # the Gausian Markov random field case:
+    # the Gaussian Markov random field case:
     } else if (priors[[m]][[1]] == "gmrf") {
       if (length(priors[[m]]) != 3 || priors[[m]][[2]] <= 2 ||
           priors[[m]][[3]] <= 0) {
@@ -61,7 +61,7 @@ check_set_priors <- function(priors,M,R) {
         stop("prior degrees of freedom must be at least R + 2")
       }
       if (!(is.matrix(priors[[m]][[3]]) && all(dim(priors[[m]][[3]]) == R) &&
-            isSymmetric(priors[[m]][[3]]) &&
+            is.numeric(priors[[m]][[3]]) && isSymmetric(priors[[m]][[3]]) &&
             all(eigen(priors[[m]][[3]],TRUE)$values > 0))) {
         stop("must supply positive-definite R x R prior scale matrix")
       }

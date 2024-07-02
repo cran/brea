@@ -1,8 +1,10 @@
-ffe875456f264d8ffb70615fba2987dd *DESCRIPTION
-1e536fd059fe322f8092145aea85f823 *NAMESPACE
+5bf670d93c18232cbad1e33ba65056c9 *DESCRIPTION
+afe4f0a6f71b79f84ee01a7d3e89020e *NAMESPACE
 3d3cfb200ec014e01e8a5c7e44959e64 *R/all_whole.R
 f1d944c07ab47e38e0077053645dafb4 *R/brea_mcmc.R
+d3e7ca16d4f053958b1bfd2b5c8e6c43 *R/brea_mcmc_ms.R
 e27a78a5d3795266830147dd07969f35 *R/check_set_outcome.R
-ca6c302347e092cb9fe15bad56783342 *R/check_set_predictors.R
-5372c052800a539cc344d8e620bc3840 *R/check_set_priors.R
+9463d5aca7f8e0c846873ecc0ec63bcd *R/check_set_predictors.R
+c0019a0931b2d210c03617bbfbe3026b *R/check_set_priors.R
 555926e3cc016766955dd6050006bc45 *man/brea_mcmc.Rd
+ceedd3a1a08fe449b648a0194753abfe *man/brea_mcmc_ms.Rd

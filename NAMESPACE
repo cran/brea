@@ -1,2 +1,2 @@
-export("brea_mcmc")
+export("brea_mcmc","brea_mcmc_ms")
 importFrom("stats", "dnorm", "rWishart", "rgamma", "rnorm", "runif")

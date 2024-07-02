@@ -11,7 +11,7 @@ check_set_predictors <- function(x,K) {
   # Case 1: x is a matrix of positive integers ---------------------------------
   
   
-  if (is.matrix(x) && all_whole(x) && all(x > .5)) {
+  if (is.matrix(x) && all_whole(x) && all(x > 0.5)) {
     
     # convert x from floating points to integers if necessary:
     if (!is.integer(x)) {
@@ -44,8 +44,8 @@ check_set_predictors <- function(x,K) {
     if (!is.null(K) && !is.integer(K)) K <- as.integer(round(K))
     
     # create variables to store new x and K values:
-    x.new <- matrix(0L,nrow(x),ncol(x))
-    K.new <- integer(ncol(x))
+    x_new <- matrix(0L,nrow(x),ncol(x))
+    K_new <- integer(ncol(x))
 
     # loop over columns m of x:      
     for (m in seq_len(ncol(x))) {
@@ -57,13 +57,13 @@ check_set_predictors <- function(x,K) {
       if (is.factor(xm)) {
         
         # store integer factor codes into the new integer matrix:
-        x.new[,m] <- as.integer(xm)
+        x_new[,m] <- as.integer(xm)
         
         # calculate K[m] if K is null; otherwise use supplied value:
         if (is.null(K)) {
-          K.new[m] <- nlevels(xm)
+          K_new[m] <- nlevels(xm)
         } else {
-          K.new[m] <- K[m]
+          K_new[m] <- K[m]
         }
         
       # case ii: the predictor is a vector of positive integers:
@@ -73,13 +73,13 @@ check_set_predictors <- function(x,K) {
         if (!is.integer(xm)) xm <- as.integer(round(xm))
         
         # store the integer-type variable xm into the new integer matrix:
-        x.new[,m] <- xm
+        x_new[,m] <- xm
         
         # calculate K[m] if K is null; otherwise use supplied value:
         if (is.null(K)) {
-          K.new[m] <- max(xm)
+          K_new[m] <- max(xm)
         } else {
-          K.new[m] <- K[m]
+          K_new[m] <- K[m]
         }
         
       # otherwise the predictor was an invalid type:
@@ -88,8 +88,8 @@ check_set_predictors <- function(x,K) {
     } # end loop over columns m of x
     
     # replace x and K with their new values:
-    x <- x.new
-    K <- K.new
+    x <- x_new
+    K <- K_new
     
         
   # otherwise x was of neither allowed type ------------------------------------
