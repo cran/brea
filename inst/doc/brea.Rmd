@@ -1,0 +1,486 @@
+---
+title: "Introduction to brea"
+author: "Adam King"
+date: "2024-07-22"
+bibliography: brea.bib
+link-citations: TRUE
+output: rmarkdown::html_vignette
+#output: rmarkdown::pdf_document
+vignette: >
+  %\VignetteIndexEntry{Introduction to brea}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Background
+
+The package name `brea` stands for *Bayesian recurrent events analysis*. This software is capable of implementing discrete time-to-event models with a variety of features beyond just recurrent events though, including competing risks, time-varying covariates, GAM-style incorporation of nonlinear covariate effects, random effects (frailties), and multiple states.
+
+This tutorial contains a detailed introduction to the use of the `brea` R package. Our goal is to help the user understand how to format data and input parameters for the `brea_mcmc()` function, as well as how to extract and interpret relevant results from its output. The advanced features mentioned in the preceding paragraph (such as multistate models) will be covered in a future tutorial.
+
+To make best use of this tutorial (and the `brea` software), the user should already be familiar with both basic discrete time survival modeling and Bayesian inference via simulation (MCMC); we refer the user to [@allison1982] and [@gelmanetal2013], respectively, for detailed expositions of these topics. We do however also provide brief refreshers on these topics in the next sections.
+
+Our main goal in this tutorial is to implement a simple Cox proportional hazards model, namely the leukemia remission times example from [@cox1972]. Specifically, we first illustrate how to fit this model with the classical frequentist partial likelihood approach using the `coxph()` function from the `survival` package. Second, we show how to reformulate the data for discrete time analysis, and fit the model using frequentist simple logistic regression with the `glm()` function. Finally, we adopt a Bayesian approach for this discrete time model, and obtain inferences using the `brea_mcmc()` function from the `brea` package. Results from these three approaches will be compared and contrasted.
+
+### Discrete Time Survival Analysis
+
+Most popular time-to-event models and corresponding software (e.g., the `survival` package in R) assume that the times of event occurrence are *continuous*, meaning an event can occur at any instant in some time span. For example, we may be interested in the exact number of seconds from rocket liftoff until the rocket payload achieves orbit (or experiences a competing risk of a malfunction).
+
+*Discrete* timing of events, on the other hand, can arise in two ways. First, event occurrence may only be possible at a discrete (i.e., finite or listable) collection of time points. For example, we may be interested in the number of academic terms before a student graduates (or experiences a competing risk of dropout). In this example, the event of interest (graduation) may only occur at the conclusion of $t=1$ semester, $t=2$ semesters, $t=3$ semesters, and so on; it is not possible for graduation to happen at $t=3.14159$ semesters (whereas a rocket could malfunction at exactly $t=3.14159$ seconds after liftoff).
+
+The second way discrete survival times arise is when continuous time is partitioned into intervals, and only the identity of the event's interval is recorded. For example, a car accident event may occur at an exact instant in time, but a car insurance company modeling the time between accidents may only record the day of the accident. This special case of discrete time-to-event data is called *grouped time*, and it is responsible for the occurrence of tied observations in nominally continuous survival data.
+
+#### Hazard Rates and Cox Proportional Hazards Models
+
+With continuous time, the most common approach for analyzing event times is to model the *hazard rate* of event occurrence. Let $T$ denote a continuous event time variable, taking some value in the interval $(0,\infty)$. The  *continuous time hazard rate* $\lambda(t)$ is defined to be the "instantaneous risk" of event occurrence at time $t$ given the event of interest has not yet occurred prior to $t$:
+$$
+\lambda(t)=\lim_{dt\rightarrow 0} \frac{P(t\leq T \leq t+dt)}{dt\cdot P(T\geq t)}
+$$
+The *continuous time Cox proportional hazards model* then models these hazard rates with:
+$$
+\lambda(t)=\lambda_0(t)\text{exp}(\beta_1X_1+\cdots\beta_MX_M)=\text{exp}(f_0(t)+\beta_1X_1+\cdots\beta_MX_M)
+$$
+where $\lambda_0(t)$ is an arbitrary function of time $t$ called a *baseline hazard* (and $f_0(t)=\text{log}(\lambda_0(t))$ is this same baseline hazard on a log scale) and $X_1,\ldots,X_M$ are covariate values [@cox1972]. Taking logarithms of both sides of this equation yields an equivalent form of our continuous time Cox model:
+$$
+\text{log}(\lambda(t)) = \eta(t) = f_0(t)+\beta_1X_1+\cdots\beta_MX_M
+$$
+where $\eta(t)$ is the *linear predictor* incorporating both the time effects and other covariate effects.
+
+As with continuous time, with discrete time we will also model the *hazard rate* of event occurrence. Let $T$ now denote the discrete time of event occurrence, and we assume the possible discrete time points are labeled with the positive integers. So for example, if the event of interest occurs at the third discrete time point, then $T=3$. If there is only a single event type (i.e., no competing risks), we define the *discrete time hazard rate* $\lambda(t)$ to be the probability of event occurrence at time $t$ given the event has not already occurred at an earlier time point:
+$$\lambda(t)=P(T=t|T\geq t)$$
+Unlike with the continuous time hazard rate (which may take any value between 0 and $\infty$), the discrete time hazard rate is a probability and is thus bounded between 0 and 1. Hence, we relate $\lambda(t)$ to a linear predictor $\eta(t)$ encapsulating covariate effects (including the effect of time $t$) using the *logit link function* (just as in logistic regression):
+$$
+\text{log}\left(\frac{\lambda(t)}{1-\lambda(t)}\right) = \eta(t) = f_0(t)+\beta_1X_1+\cdots\beta_MX_M
+$$
+Here, for the discrete time model, proportionality is now technically in the *odds* of the hazard. However, for simplicity we will still refer to this as the *discrete time Cox proportional hazards model*.
+
+#### Expanding Data to Person-Time Format
+
+The discrete Cox model is recognizable as being identical to *logistic regression*. However, the difference here is that we must include one logistic regression observation *for each discrete time point $t$ each sample member was at risk for event occurrence* in order to model the aggregate risk experienced by each sample member. To illustrate, suppose we have the following data set:
+
+ID | T | $\delta$ | age | gender
+-- | - | -------- | --- | ------
+01 | 3 | 1 | 24 | M
+02 | 2 | 0 | 27 | F
+$\vdots$ | $\vdots$ | $\vdots$ | $\vdots$ | $\vdots$
+50 | 5 | 1 | 33 | F
+
+where ID is a subject id number, $T$ is *study time* (the time of either event occurrence or right censoring), $\delta$ is an event indicator (1 for event occurrence, 0 for right censoring), and age and gender are covariates. For instance, the first study subject did *not* experience the event of interest at times $t=1$ or $t=2$ but *did* experience the event of interest at time $t=3$.
+
+To fit the discrete Cox model to this data, we must first expand the data set to *person-time format*, with *one row of data for each discrete time point each sample member was at risk for event occurrence*. The above data set would become:
+
+ID | t | Y | age | gender
+-- | - | - | --- | ------
+01 | 1 | 0 | 24 | M
+01 | 2 | 0 | 24 | M
+01 | 3 | 1 | 24 | M
+02 | 1 | 0 | 27 | F
+02 | 2 | 0 | 27 | F
+$\vdots$ | $\vdots$ | $\vdots$ | $\vdots$ | $\vdots$
+50 | 1 | 0 | 33 | F
+50 | 2 | 0 | 33 | F
+50 | 3 | 0 | 33 | F
+50 | 4 | 0 | 33 | F
+50 | 5 | 1 | 33 | F
+
+where $t$ is the discrete time for that specific person-time observation, and $Y$ is an outcome indicator ($Y=0$ for no event occurring at that person-time point, and $Y=1$ for event occurrence). Note that when $t=T$ (i.e., it is the last discrete time point of observation for a sample member), $Y=\delta$. For example, study subject 02 was observed for two discrete time points, and because her $\delta$ value is 0, her $Y$ value at her second person-time point of observation is also 0. For all three study subjects depicted here, we assumed their ages remained constant across all discrete time points of observation. However, if we knew otherwise, we could easily calculate potentially distinct age values for each person-time observation.
+
+#### Formatting Data for the `brea` Package
+
+Once a data set has been expanded into person-time format, it may be fit via conventional logistic regression software (e.g., the `glm()` function with the `family=binomial` option; see the example later in this tutorial). The `brea_mcmc()` function from the `brea` package is based on logistic regression, but has one additional requirement: *All* predictor variables (including time $t$) must be *specified* in a *categorical* manner, either by giving positive integer values $k$ (where $k=1,\ldots,K$ for some $K$) or by using an R `factor` data type. The logistic regression model implementing the discrete Cox model then becomes:
+
+$$
+\text{log}\left(\frac{\lambda(t)}{1-\lambda(t)}\right) = \eta(t) = \beta_0 + \beta_1[X_1(t)] + \beta_2[X_2(t)] + \cdots + \beta_M[X_m(t)]
+$$
+Here each predictor value $X_m(t)$ takes a positive integer value $k$ between $1$ and $K_m$, and so the effects of the $m^\text{th}$ predictor are modeled on the logit scale by a collection of $K_m$ parameters $\beta_m[1]$, $\beta_m[2]$,...,$\beta_m[K_m]$.
+
+Note that while the *specification* of covariate values must be *categorical*, *quantitative* covariates are still fully supported. To include a quantitative covariate, the user must first discretize the covariate (e.g., using the `cut()` function). This effectively means the potentially arbitrary smooth relationship between the covariate and the hazard will be approximated by a *step function*. To increase the amount of smoothness, a finer discretization (with a larger number $K_m$ of categories) may be used. *Gaussian Markov random field (GMRF)* prior distributions are then used for the parameter values $\beta_m[1]$, $\beta_m[2]$,...,$\beta_m[K_m]$ to ensure regularity/smoothness of the functional relationship even if the discretization is fine. See [@kingweiss2021] and the practical example later in this tutorial for more details.
+
+### Bayesian Inference via MCMC Simulation
+
+In Bayesian statistics, information and uncertainty about model parameters is encapsulated by probability distributions for those parameters. We briefly discuss these distributions, and then describe how to obtain inferential results by numerically sampling from the posterior distribution.
+
+#### Prior and Posterior Distributions
+
+The probability distribution we use to capture knowledge we have about model parameters *prior* to seeing the sample data is called the *prior distribution*. For example, if had reason to believe that a model parameter $\mu$ was equal to 5, then we could use a prior distribution for $\mu$ with a mean of 5. Furthermore, if we were roughly 95% sure (prior to seeing the sample data) that $\mu$ is between 1 and 9, then we could use a $N(5,2^2)$ (i.e., a normal distribution with a mean of 5 and a standard deviation of 2) prior distribution for $\mu$, since for this distribution roughly 95% of its probability is between 1 and 9:
+```{r}
+pnorm(9,5,2)-pnorm(1,5,2)
+qnorm(c(0.025,0.975),5,2)
+```
+With our modeling approach, we will generally use *noninformative priors* that specify little, if any, prior information about the model parameters (other than, for example, the fact that adjacent step heights in a step function approximation of a smooth curve are close together). We will illustrate how to do this in the practical example, and users of the `brea` package will generally *not* have to be concerned with developing prior distribution specifications beyond "default" noninformative priors.
+
+The *posterior distribution* combines the information about the model parameters from the prior distribution with the information from the sample data to produce a *single probability distribution* that encapsulates our most up-to-date state of knowledge about the parameters. The posterior distribution is the primary "output" or "result" or "inference" in a Bayesian analysis.
+
+#### Inference via MCMC Sampling from the Posterior Distribution
+
+Mathematically, the posterior distribution is completely determined by the combination of the prior distribution, statistical model, and sample data. In all but the simplest cases, this probability distribution doesn't have some simple form that we can determine using algebra or calculus. Instead, the only practical way to learn about this distribution is to *take a random sample from the posterior distribution*. Note that here we are talking about using computer simulation algorithms to draw a random sample from the posterior probability distribution of the *model parameters*, and this sample is completely different from the *sample data* that we are analyzing.
+
+The most common way of selecting a random sample from the posterior distribution is via a numerical algorithm called *Markov chain Monte Carlo*, or *MCMC* for short. This is the algorithm used by the `brea_mcmc()` function we will use later. One important difference between a random sample drawn using an MCMC algorithm and a *simple random sample (SRS)* that the user may be familiar with is that unlike with an SRS sample, the values from an MCMC sample are *not independent of each other*. Specifically, MCMC generates values for the sample as a *sequence*, and successive elements of the sequence tend to be more similar to each other than independently drawn values (i.e., the sequence of sampled values exhibits positive *autocorrelation*).
+
+As a result, for a given sample size $S$, there is usually much less information in a sample drawn using MCMC than an independent SRS sample. So while we may draw a sample of size $S$ using MCMC, the *effective sample size* (the size of an independent SRS sample that would contain the same amount of information as the MCMC sample) is often 10 or even 100 times smaller than $S$. In the practical example later, we will show how to calculate the effective sample size using the `effectiveSize()` function from the `coda` package; for publication-quality inferences, we recommend choosing the MCMC sample size $S$ so that the effective sample size is at least 1,000 (which may necessitate choosing $S=10,000$ or even $S=100,000$).
+
+Once we have obtained a sample from the posterior distribution, it is very easy to obtain the types of inferential results the user is familiar with from fitting frequentist models. Specifically, we may obtain a *point estimate* of a specific model parameter by calculating the mean or median of the MCMC sample for that parameter. Similarly, we may obtain a *confidence interval* (CI, which Bayesians often call *credible intervals*) for a model parameter by calculating *quantiles* of the sampled values of that parameter. For example, we could find the endpoints of a 95% CI by calculating the $2.5^\text{th}$ percentile and $97.5^\text{th}$ percentile of the posterior MCMC sample for the desired parameter. We illustrate this in the practical example below.
+
+## Detailed Example of a Simple Cox Model
+
+We now apply both classical frequentist models and our `brea` model to the first data set ever used for a Cox proportional hazards model, namely the leukemia remission data from [@cox1972]. This data came from a clinical trial of acute leukemia patients with two treatment groups, the drug 6-mercaptopurine (6-MP) and a placebo control. There were $n=42$ patients in total with 21 assigned to each group. The outcome of interest was the duration of leukemia remission (i.e., the *event of interest* was the *end* of cancer remission, so *lower* hazard of event occurrence is better). These durations were measured in whole weeks, so time here is discrete. The data appear below:
+
+Treatment Group | Observed Duration of Remission (weeks) (\* denotes right-censored observations)
+- | -
+Group 0 (6-MP) | 6\*, 6, 6, 6, 7, 9\*, 10\*,10, 11\*, 13, 16, 17\*, 19\*, 20\*, 22, 23, 25\*, 32\*, 32\*, 34\*, 35\*
+Group 1 (control) | 1, 1, 2, 2, 3, 4, 4, 5, 5, 8, 8, 8, 8, 11, 11, 12, 12, 15, 17, 22, 23
+
+We will first prepare and analyze this data with a continuous time Cox proportional hazards model via the `survival` package. Then we will use a discrete time Cox model approach, implemented with both vanilla logistic regression and finally with the `brea` package.
+
+### Classical Partial Likelihood Inference using `coxph()`
+
+We begin by creating separate variables for the study time variable `time` (time of event occurrence or right censoring), the event/censoring indicator variable `event` (1 for event occurrence, 0 for right censoring), and the treatment group variable `treat` (0 for treatment, 1 for control):
+
+```{r}
+time <- c(6,6,6,6,7,9,10,10,11,13,16,17,19,20,22,23,25,32,32,34,35,
+          1,1,2,2,3,4,4,5,5,8,8,8,8,11,11,12,12,15,17,22,23)
+
+event <- c(0,1,1,1,1,0,0,1,0,1,1,0,0,0,1,1,0,0,0,0,0,
+           1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1)
+
+treat <- c(rep(0,21),rep(1,21))
+```
+
+Next, we load the `survival` package and define our outcome variable `y` to be a survival object of class `Surv`:
+
+```{r}
+library(survival)
+
+y <- Surv(time,event)
+```
+
+Finally, we fit the Cox proportional hazards model and summarize the results:
+
+```{r}
+cph_fit <- coxph(y ~ treat)
+
+summary(cph_fit)
+```
+
+The estimated coefficient $\beta_1$ of the treatment variable `treat` is `r summary(cph_fit)$coefficients[1]`. Since this value represents a log hazard rate ratio, we exponentiate it to obtain the hazard ratio estimate `r summary(cph_fit)$coefficients[2]`. Hence, we estimate the risk of remission ending is 4.82 times greater in the placebo group than in the 6-MP group. We may also obtain and interpret confidence intervals for `treat`'s coefficient $\beta_1$ or its exponentiated version:
+
+```{r}
+confint(cph_fit)
+exp(confint(cph_fit))
+```
+
+We can be 95% sure that the chances of cancer remission ending is between 2.15 and 10.81 times more likely for patients who receive placebo when compared to patients who receive the 6-MP treatment. Thus, we have statistically significant evidence that the 6-MP treatment is highly effective at maintaining remission.
+
+Note that `coxph()` treats the event times as *continuous*, despite the fact that the event times have been grouped into whole weeks (and are thus *discrete*). This grouping has resulted in numerous *tied observations*, which are sample members with the exact same observed event time (e.g., four members of the control group all experienced the event of interest at time $t=8$). With truly continuous data, ties would be impossible, and the partial likelihood model fitting method must be adjusted to allow for fitting with tied data. Several different such adjustments are available in `coxph()`, including the `efron` method (the default), the `breslow` method, and the `exact` method, which yield different though qualitatively similar results:
+
+```{r}
+coxph(y ~ treat,ties="efron")
+
+coxph(y ~ treat,ties="breslow")
+
+coxph(y ~ treat,ties="exact")
+```
+
+In summary, the classic Cox proportional hazards model yields hazard rate ratio estimates of 4.52, 4.82, and 5.09, depending on the method for handling ties.
+
+### Discrete Time Survival Data Preparation
+
+Here we will expand the data into *person-time format*, with one observation for each discrete time point each patient was at risk for event occurrence. We begin by setting the total number of person-time observations `N` and creating matrices of height `N` to store the predictor values `x` (with first column subject id, second column time, and third column treatment group) and binary response variable `y`:
+
+```{r}
+N <- sum(time) # total number of person-time observations
+x <- matrix(0,N,3)  # columns id, time, and treatment group
+colnames(x) <- c("id","t","treat")
+y <- matrix(0,N,1) # only one column since only one competing risk
+```
+
+Next we iterate through the `r length(time)` observations in the original (unexpanded) data set, expanding each one and adding the corresponding rows to `x` and `y`:
+
+```{r}
+next_row <- 1  # next available row in the person-time matrices
+for (i in seq_along(time)) {
+  rows <- next_row:(next_row + time[i] - 1)  # person-time rows to fill
+  x[rows,1] <- rep(i,time[i]) # subject id number is constant for each person
+  x[rows,2] <- seq_len(time[i])  # discrete time is integers 1,2,...,time[i]
+  x[rows,3] <- rep(treat[i],time[i])  # treatment group is constant
+  y[rows,1] <- c(rep(0,time[i] - 1),event[i])  # outcome is 0's until study time
+  next_row <- next_row + time[i]  # increment the next available row pointer
+}
+```
+
+Let's view the data from the first two study subjects in both the original and expanded forms to confirm this worked as intended:
+
+```{r}
+original_data <- data.frame(id=seq_along(time),time,event,treat)
+head(original_data,2)
+```
+
+```{r}
+expanded_data <- data.frame(x,y)
+head(expanded_data,12)
+```
+
+We can see that the data from the first two members of the original sample were correctly expanded into person-time format: The first six person-time rows are for subject number 1, while the second six are for subject number 2 (since both of the first two subjects were observed for six discrete time points each). In addition, the only event observed for these two subjects was at the sixth discrete time point (`t=6`) for the second subject (`id=2`), so that is the only row of the person-time data from the first two subjects where `y=1`.
+
+### Frequentist Logistic Regression Inference using `glm()`
+
+Before we apply logistic regression to the expanded person-time data set, we must decide how to model the effect of discrete time $t$ on the hazard of event occurrence. Recall that the discrete time Cox proportional hazards model includes an arbitrary function of time $f_0(t)$ (known as a baseline hazard):
+
+$$
+\text{log}\left(\frac{\lambda(t)}{1-\lambda(t)}\right) = \eta(t) = f_0(t)+\beta_1X_1+\cdots\beta_MX_M
+$$
+Since here we will only be using standard logistic regression software via the `glm()` function (as opposed to a *generalized additive model* which would allow inclusion of arbitrary smooth functions $f()$ inside the linear predictor $\eta(t)$), we must use an alternative way of modeling the effect of discrete time $t$ on the hazard of event occurrence. Two readily available choices would be to include a polynomial function of discrete time $t$ (e.g., a linear or quadratic function) or to group discrete time $t$ into intervals and treat it categorically. We consider each of these in turn.
+
+#### Polynomial Time Effect
+
+With linear modeling of the effect of time $t$, our model becomes:
+$$
+\text{log}\left(\frac{\lambda(t)}{1-\lambda(t)}\right) = \beta_0 + \beta_1X_1(t) + \beta_2X_2
+$$
+where $X_1(t)=t$ is discrete time and $X_2$ is treatment group (0 for 6-MP, 1 for placebo). We may fit this logistic regression model to our person-time data set using the `glm()` function with the `family=binomial` option:
+
+```{r}
+linear_fit <- glm(y ~ t + treat,family=binomial,data=expanded_data)
+summary(linear_fit)
+```
+
+We may then obtain a point estimate of the hazard rate ratio (the exponentiated coefficient of the treatment variable $X_2$) using:
+
+```{r}
+beta2_hat <- coef(linear_fit)["treat"]
+exp(beta2_hat)
+```
+
+Note that technically this is an *odds ratio* estimate, not a *hazard ratio* estimate, since the discrete Cox model sets the log of the *odds* of the hazard equal to the linear predictor $\eta(t)$. Odds ratios will generally tend to be more extreme (further from 1) than corresponding risk/hazard ratios, though when the probabilities are small (as they are for most discrete survival models), the differences are modest. We will informally still interpret odds ratio estimates from discrete Cox models as though they were hazard rate ratios.
+
+We may also try quadratic and cubic formulations for the time effect:
+
+```{r}
+quadratic_fit <- glm(y ~ poly(t,2) + treat,family=binomial,data=expanded_data)
+exp(coef(quadratic_fit)["treat"])
+cubic_fit <- glm(y ~ poly(t,3) + treat,family=binomial,data=expanded_data)
+exp(coef(cubic_fit)["treat"])
+```
+
+#### Step Function Time Effect
+
+Next, we consider grouping discrete time t into non-overlapping intervals and treating the variable as categorical. This is equivalent to approximating the baseline hazard $f_0(t)$ with a *step function*. When doing frequentist inference with this approach, we must have at least one observed event in each interval of $t$ values, or else the corresponding parameter estimate for that interval will be $-\infty$ (since the hazard appears to be zero in that interval). Our dataset only contains 30 observed events, and the last time of event occurrence is $t=23$. With such limited data, we follow the suggestion of [@cox1972] of dividing the variable range into intervals of length 10 (with the exception of the last interval, which will have length 15 in order to include the last time of observation):
+
+```{r}
+expanded_data$t_cat <- cut(expanded_data$t,c(0,10,20,35))
+```
+
+By doing a cross tabulation of the discrete time variable `t` in the expanded person-time data set with the new grouped version `t_cat`, we can verify that all discrete time observations have been grouped into the correct intervals:
+
+```{r}
+with(expanded_data,table(t,t_cat))
+```
+
+Indeed, we observe for example that all observations with `t` values between 1 and 10 have been correctly assigned to the interval `(0,10]`. Our discrete time Cox model with a step function baseline hazard is now as follows:
+$$
+\text{log}\left(\frac{\lambda(t)}{1-\lambda(t)}\right) = \beta_0 + \beta_1X_1(t) + \beta_2X_2(t) + \beta_3X_3
+$$
+where $X_1(t)$ is a dummy/indicator variable for the *second* interval $(10,20]$ (i.e., $X_1(t)=1$ if $t\in (10,20]$ and $X_1(t)=0$ otherwise), $X_2(t)$ is a dummy/indicator variable for the *third* interval $(20,30]$ (so the first interval $(0,10]$ is the reference group), and $X_3$ is the treatment group variable. We may now fit this model:
+
+```{r}
+step_fit <- glm(y ~ t_cat + treat,family=binomial,data=expanded_data)
+summary(step_fit)
+```
+
+Our estimated hazard rate ratio $\text{exp}(\hat \beta_3)$ for the treatment effect is:
+
+```{r}
+exp(coef(step_fit)["treat"])
+```
+
+We may also obtain a 95% CI for the hazard rate ratio as follows:
+
+```{r}
+confint(step_fit)
+exp(confint(step_fit)["treat",])
+```
+
+Hence, using this model we estimate that the hazard of remission ending is 6.28 times higher in the placebo group compared to the 6-MP group. In addition, we can be 95% sure the hazard is between 2.72 and 15.93 times higher among placebo patients when compared to patients receiving the active treatment.
+
+Note that the effect estimate here is substantially larger in magnitude than for any of the other formulations we have considered thus far. This is due to our step function approximation of the baseline hazard (the time effect) being too crude (only having three steps). With our Bayesian approach in the next section, we will see how to fix this.
+
+### Bayesian Inference using `brea_mcmc()`
+
+The function `brea_mcmc()` from the `brea` package is used to fit a Bayesian version of our discrete time Cox proportional hazards model using a Markov chain Monte Carlo (MCMC) algorithm, as described earlier. Here we will illustrate how to use this function and interpret its output. We will end by comparing our results with both the frequentist continuous and discrete time Cox models.
+
+#### Setting Up an MCMC Run
+
+The `brea_mcmc()` function has the following function signature:
+
+```{r, eval=FALSE}
+brea_mcmc(x, y, priors = NULL, S = 1000, B = 100, n = NULL, K = NULL, store_re = FALSE)
+```
+
+The only required arguments the user must specify are `x` and `y`, which specify, respectively, the predictor values and event occurrence status for each person-time observation of the expanded data set. More specifically, `y` is a vector of length `N` or a matrix of height `N` with a single column (or with multiple columns if there are competing risks), where `N` is the number of person-time observations. Each entry of `y` is either 0 (if the event of interest did not occur at that person-time observation) or 1 (if the event of interest did occur). The `y` variable we created earlier meets these requirements without further modification.
+
+The `x` variable used to specify covariates at the person-time level may either be a matrix or dataframe with `N` rows. *All* predictors must use a categorical formulation (though often the categories represent steps in a step function approximation of an arbitrary smooth function of a numerical predictor). The categories of each categorical predictor are represented either by positive whole number values or by R `factor` variables (factors are only possible if `x` is a data frame; if `x` is a matrix, then `x` must be numeric).
+
+We will now construct a numeric matrix `x` that meets the above requirements. First, we will use the same grouping of discrete time `t` into three intervals as used in the previous section. We will also change the coding of the treatment indicator to take values 1 and 2 instead of 0 and 1:
+
+```{r}
+x_brea <- matrix(0,N,2)
+x_brea[,1] <- cut(expanded_data$t,c(0,10,20,35),labels=FALSE) # grouped time t
+x_brea[,2] <- expanded_data$treat + 1 # treatment group
+```
+
+Typically, users will also specify the `priors` argument, which determines *both* the covariate type (categorical fixed effects, quantitative covariates with step function approximations of the effects, or random effects) and any parameters for its corresponding prior distribution. However, for this first `brea` model, we will be treating both predictors as categorical fixed effects and be using corresponding noninformative priors. Since this is the default specification (when `NULL` is supplied for the `priors` argument), we do not have to provide this argument.
+
+We may then load the `brea` package and obtain a sample from the posterior distribution of the model parameters ("fitting" the model in the Bayesian sense) as follows:
+
+```{r}
+library(brea)
+set.seed(1234)
+fit <- brea_mcmc(x_brea,y)
+```
+
+Note that since the MCMC algorithm uses random number generation, we set the seed of the random number generator to ensure our results are reproducible.
+
+#### Extracting and Examining Results
+
+The structure of the R object returned by `brea_mcm()` is below:
+
+```{r}
+str(fit)
+```
+
+This object is a list with two components of interest to us (as well as a few that do not concern us now): `b_0_s` contains the posterior sampled values of the intercept parameter $\beta_0$, and `b_m_s` contains posterior sampled values of the parameters $\beta_m[k]$, where $\beta_m[k]$ represents the effect of the $k^\text{th}$ covariate value (category) of the $m^\text{th}$ predictor on the hazard of event occurrence. Specifically, the $s^\text{th}$ sampled value (post burn-in) of $\beta_m[k]$ is stored in `b_m_s[[m]][1,k,s]` (the 1 index in `[1,k,s]` denotes that we are examining the *first* competing risk, which must be specified even in cases like this where there is only one competing risk). In particular, for our model in question, `m=2` represents the treatment variable (since treatment is the *second* column of the `x_brea` matrix we supplied), `k=1` represents the 6-MP treatment, and `k=2` represents the placebo control group. Hence, MCMC samples of the treatment effect (on the linear predictor scale) may be calculated as follows:
+
+```{r}
+b_treatment <- fit$b_m_s[[2]][1,1,]
+b_control <- fit$b_m_s[[2]][1,2,]
+d <- b_control - b_treatment # sampled values of treatment effect on logit scale
+```
+
+We may then obtain point estimates and a standard error estimate of the treatment effect on the linear predictor (logit) scale, and compare it to the results from fitting a frequentist version of this model using `glm()` earlier:
+
+```{r}
+mean(d) # posterior mean point estimate
+median(d) # posterior median point estimate
+sd(d) # posterior standard deviation (standard error)
+summary(step_fit) # identical frequentist model fit with glm() earlier
+```
+
+As we can see, "fitting" the Bayesian version of this discrete Cox model gives almost exactly the same results as fitting the frequentist version using `glm()`.
+
+#### Assessing MCMC Performance and Adjusting MCMC Run Length S
+
+As described earlier, with our Bayesian approach, we obtain inferences by taking a sample from the posterior distribution of the relevant model parameters using an MCMC algorithm. How accurately this posterior sample describes the posterior distribution depends on two things: how much *serial correlation* (*autocorrelation*) is present in the MCMC sample, and the size of the MCMC sample $S$ (which is the length of the MCMC chain). We may visualize the sequence of sampled values using a *trace plot*, which plots the MCMC iteration number along the horizontal axis and the sampled parameter value along the vertical axis:
+
+```{r, fig.width=6,fig.height=3}
+par(cex=0.66,mgp=c(1.75,0.5,0),mai=c(0.4,0.4,0.1,0.1))
+plot(d,type="l",xlab="MCMC Interation Number s",
+     ylab="Sampled Value of Treatment Effect Parameter")
+```
+
+From the plot, the serial correlation does not seem too severe. As mentioned earlier though, it's useful to calculate an *effective sample size* estimate, which is the size of an independent sample that contains the same information as contained in our MCMC sample.
+
+```{r}
+library(coda)
+effectiveSize(d)
+```
+
+The `brea_mcmc()` function uses a default posterior sample size of $S=1,000$, and this sample produced an effective sample size of `r effectiveSize(d)`, meaning our efficiency was around 20%. As mentioned earlier, we typically should seek to have effective sample sizes over 1,000, and since the MCMC run is already very fast, we can increase the chain length to $S=10,000$ (and also increase the initial portion of the chain discarded as *burn-in* to $B=1,000$):
+
+```{r}
+set.seed(1234)
+fit_10k <- brea_mcmc(x_brea,y,S=10000,B=1000)
+d <- fit_10k$b_m_s[[2]][1,2,] - fit_10k$b_m_s[[2]][1,1,]
+effectiveSize(d)
+mean(d)
+median(d)
+sd(d)
+exp(median(d))
+```
+
+Our effective sample size estimate is now comfortably over 1,000, though our estimates are not substantially changed (and are still quite close to the corresponding frequentist estimates, as we would expect).
+
+#### Better Step Function Approximation using the GMRF Prior Type
+
+We hypothesized above that our step function approximation of the time effect which only used three steps was too crude to adequately model the time effect. However, with the frequentist approach, we were restrained from including a more fine-grained step function by the limited amount of data available. With our Bayesian approach however, we can circumvent this restriction by using a prior distribution that mathematically "ties together" adjacent steps, which allows us to estimate step heights even if there is little to no data directly influencing each step height. One such prior distribution is called a *Gaussian Markov random field (GMRF)*, and the `brea` package includes this as a possible prior type.
+
+First, we will re-group the discrete time variable $t$ into intervals of length 3 instead of intervals of length 10:
+
+```{r}
+x_brea[,1] <- cut(expanded_data$t,seq(0,36,3),labels=FALSE)
+```
+
+Next, we must explicitly set the `priors` argument of the `brea_mcmc()` function; `priors` is a list with one element for each covariate (column of `x`). Each element, in turn, is a list where the first element specifies the covariate type (`gmrf` for quantitative covariates via GMRF, `cat` for categorical fixed effects, or `re` for random effects). The `gmrf` option requires two additional numerical parameters; specification of these is technical, and we recommend values of 3 and 0.01 as a "default" noninformative prior specification that should work well in most cases. Similarly, the `cat` option requires one additional numerical parameter, and a value of 4 results in a fairly noninformative prior distribution. We may now rerun the MCMC as follows:
+
+```{r}
+set.seed(1234)
+priors <- list(list("gmrf",3,0.01),list("cat",4))
+fit_gmrf <- brea_mcmc(x_brea,y,priors,S=10000,B=1000)
+d_gmrf <- fit_gmrf$b_m_s[[2]][1,2,] - fit_gmrf$b_m_s[[2]][1,1,]
+effectiveSize(d_gmrf)
+```
+
+The effective sample for this MCMC run is once again well over 1,000, so we may now proceed to giving practical inferences.
+
+#### Inferences
+
+The posterior mean, median, and standard deviation (standard error) of the treatment effect parameter on the linear predictor scale are as follows:
+
+```{r}
+mean(d_gmrf)
+median(d_gmrf)
+sd(d_gmrf)
+```
+
+Exponentiating, we find the following hazard ratio estimate:
+
+```{r}
+median(exp(d_gmrf))
+```
+
+We estimate the hazard of cancer remission cessation is 5.31 times lower for patients receiving 6-MP compared to patients receiving placebo. We may also calculate a 95% CI for the hazard rate ratio by calculating the $2.5^\text{th}$ and $97.5^\text{th}$ percentile of the posterior sample of exponentiated treatment effect parameters:
+
+```{r}
+quantile(exp(d_gmrf),c(0.025,0.975))
+```
+
+Hence, based on these results, we are 95% confident that 6-MP treatment reduces the hazard of remission ending by a factor of between 2.41 and 12.56.
+
+#### Comparison with Other Approaches
+
+We have obtained inferential results from a total of nine different model fits to the leukemia remission data from [@cox1972]. First, we fit a classic frequentist continuous time Cox proportional hazards model with three different options for the handling of tied observations (the Efron, Breslow, and exact methods). Second, we fit a frequentist discrete time Cox model with four different ways of modeling the effect of discrete time $t$: linear, quadratic, and cubic polynomials, and a step function with three steps. Finally, we obtained inferences from a Bayesian discrete time Cox model using the `brea` package with two different time effect formulations: a step function with 3 steps and a step function with 12 steps (the latter case using a GMRF prior distribution for the step heights).
+
+For all nine of these model fits, we obtained point estimates and standard errors of the treatment effect parameter on the linear predictor scale. We also obtained corresponding hazard rate ratio estimates comparing the rate of remission cessation in the placebo control group to the rate in the 6-MP treatment group. These results are summarized in the table below:
+
+```{r, include=FALSE, eval=FALSE}
+summary(coxph(Surv(time,event) ~ treat,ties="efron"))
+summary(coxph(Surv(time,event) ~ treat,ties="breslow"))
+summary(coxph(Surv(time,event) ~ treat,ties="exact"))
+summary(linear_fit); exp(coef(linear_fit)["treat"])
+summary(quadratic_fit); exp(coef(quadratic_fit)["treat"])
+summary(cubic_fit); exp(coef(cubic_fit)["treat"])
+summary(step_fit); exp(coef(step_fit)["treat"])
+median(d); sd(d); median(exp(d))
+median(d_gmrf); sd(d_gmrf); median(exp(d_gmrf))
+```
+
+Model | Point Estimate | Standard Error | Hazard Ratio Estimate
+- | - | - | -
+Continuos CPH - Efron Ties | 1.57 | 0.41 | 4.82
+Continous CPH - Breslow Ties | 1.51 | 0.41 | 4.52
+Continous CPH - Exact Ties | 1.63 | 0.43 | 5.09
+Discrete CPH - Linear Time | 1.77 | 0.44 | 5.89
+Discrete CPH - Quadratic Time | 1.71 | 0.43 | 5.55
+Discrete CPH - Cubic Time | 1.71 | 0.43 | 5.53
+Discrete CPH - 3-Step Time | 1.84 | 0.45 | 6.28
+`brea` - 3-Step Time | 1.83 | 0.46 | 6.26
+`brea` - 12-Step Time | 1.67 | 0.42 | 5.31
+
+While the results of all nine model fits were qualitatively similar, there were clear patterns regarding which results were most similar to others. For example, the frequentist and Bayesian discrete time Cox models the 3-step formulation for the time effect yielded almost identical results, which makes sense considering these are essentially the same model but fit in drastically different ways.
+
+In addition, the continuous time Cox model fit with the *exact* method of handling ties performed quite similarly to the `brea` model with a flexible (12-step) formulation for the baseline hazard function. Again, this makes sense, as the models are quite similar, with the main difference being that we expect the log *odds ratio* estimate for the `brea` model (1.67) to be slightly further from the null value of 0 than a corresponding log *hazard ratio* from the continuous CPH model (1.63), which is what was observed. 
+
+## References

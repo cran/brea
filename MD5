@@ -1,4 +1,4 @@
-5bf670d93c18232cbad1e33ba65056c9 *DESCRIPTION
+fa3ffdffdbc8cc26693ee1de555b6be9 *DESCRIPTION
 afe4f0a6f71b79f84ee01a7d3e89020e *NAMESPACE
 3d3cfb200ec014e01e8a5c7e44959e64 *R/all_whole.R
 f1d944c07ab47e38e0077053645dafb4 *R/brea_mcmc.R
@@ -6,5 +6,11 @@ d3e7ca16d4f053958b1bfd2b5c8e6c43 *R/brea_mcmc_ms.R
 e27a78a5d3795266830147dd07969f35 *R/check_set_outcome.R
 9463d5aca7f8e0c846873ecc0ec63bcd *R/check_set_predictors.R
 c0019a0931b2d210c03617bbfbe3026b *R/check_set_priors.R
+5da0dabc90ea1f7557f1f2865ffa04ec *build/vignette.rds
+e67a22481878f8fe357860d2528ae8f8 *inst/doc/brea.R
+91b9f86e452d55f55cff616d5cc53d3d *inst/doc/brea.Rmd
+468c56d089f01034911555b8d5c011a6 *inst/doc/brea.html
 555926e3cc016766955dd6050006bc45 *man/brea_mcmc.Rd
 ceedd3a1a08fe449b648a0194753abfe *man/brea_mcmc_ms.Rd
+91b9f86e452d55f55cff616d5cc53d3d *vignettes/brea.Rmd
+03fbbb40d7b0894cfd2f9bf454fb43b2 *vignettes/brea.bib

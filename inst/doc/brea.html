@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Adam King" />
+
+<meta name="date" content="2024-07-22" />
+
+<title>Introduction to brea</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">
+
+div.csl-bib-body { }
+div.csl-entry {
+clear: both;
+margin-bottom: 0em;
+}
+.hanging div.csl-entry {
+margin-left:2em;
+text-indent:-2em;
+}
+div.csl-left-margin {
+min-width:2em;
+float:left;
+}
+div.csl-right-inline {
+margin-left:2em;
+padding-left:1em;
+}
+div.csl-indent {
+margin-left: 2em;
+}
+</style>
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Introduction to brea</h1>
+<h4 class="author">Adam King</h4>
+<h4 class="date">2024-07-22</h4>
+
+
+
+<div id="background" class="section level2">
+<h2>Background</h2>
+<p>The package name <code>brea</code> stands for <em>Bayesian recurrent
+events analysis</em>. This software is capable of implementing discrete
+time-to-event models with a variety of features beyond just recurrent
+events though, including competing risks, time-varying covariates,
+GAM-style incorporation of nonlinear covariate effects, random effects
+(frailties), and multiple states.</p>
+<p>This tutorial contains a detailed introduction to the use of the
+<code>brea</code> R package. Our goal is to help the user understand how
+to format data and input parameters for the <code>brea_mcmc()</code>
+function, as well as how to extract and interpret relevant results from
+its output. The advanced features mentioned in the preceding paragraph
+(such as multistate models) will be covered in a future tutorial.</p>
+<p>To make best use of this tutorial (and the <code>brea</code>
+software), the user should already be familiar with both basic discrete
+time survival modeling and Bayesian inference via simulation (MCMC); we
+refer the user to <span class="citation">(<a href="#ref-allison1982">Allison 1982</a>)</span> and <span class="citation">(<a href="#ref-gelmanetal2013">Gelman et al.
+2013</a>)</span>, respectively, for detailed expositions of these
+topics. We do however also provide brief refreshers on these topics in
+the next sections.</p>
+<p>Our main goal in this tutorial is to implement a simple Cox
+proportional hazards model, namely the leukemia remission times example
+from <span class="citation">(<a href="#ref-cox1972">Cox
+1972</a>)</span>. Specifically, we first illustrate how to fit this
+model with the classical frequentist partial likelihood approach using
+the <code>coxph()</code> function from the <code>survival</code>
+package. Second, we show how to reformulate the data for discrete time
+analysis, and fit the model using frequentist simple logistic regression
+with the <code>glm()</code> function. Finally, we adopt a Bayesian
+approach for this discrete time model, and obtain inferences using the
+<code>brea_mcmc()</code> function from the <code>brea</code> package.
+Results from these three approaches will be compared and contrasted.</p>
+<div id="discrete-time-survival-analysis" class="section level3">
+<h3>Discrete Time Survival Analysis</h3>
+<p>Most popular time-to-event models and corresponding software (e.g.,
+the <code>survival</code> package in R) assume that the times of event
+occurrence are <em>continuous</em>, meaning an event can occur at any
+instant in some time span. For example, we may be interested in the
+exact number of seconds from rocket liftoff until the rocket payload
+achieves orbit (or experiences a competing risk of a malfunction).</p>
+<p><em>Discrete</em> timing of events, on the other hand, can arise in
+two ways. First, event occurrence may only be possible at a discrete
+(i.e., finite or listable) collection of time points. For example, we
+may be interested in the number of academic terms before a student
+graduates (or experiences a competing risk of dropout). In this example,
+the event of interest (graduation) may only occur at the conclusion of
+<span class="math inline">\(t=1\)</span> semester, <span class="math inline">\(t=2\)</span> semesters, <span class="math inline">\(t=3\)</span> semesters, and so on; it is not
+possible for graduation to happen at <span class="math inline">\(t=3.14159\)</span> semesters (whereas a rocket
+could malfunction at exactly <span class="math inline">\(t=3.14159\)</span> seconds after liftoff).</p>
+<p>The second way discrete survival times arise is when continuous time
+is partitioned into intervals, and only the identity of the event’s
+interval is recorded. For example, a car accident event may occur at an
+exact instant in time, but a car insurance company modeling the time
+between accidents may only record the day of the accident. This special
+case of discrete time-to-event data is called <em>grouped time</em>, and
+it is responsible for the occurrence of tied observations in nominally
+continuous survival data.</p>
+<div id="hazard-rates-and-cox-proportional-hazards-models" class="section level4">
+<h4>Hazard Rates and Cox Proportional Hazards Models</h4>
+<p>With continuous time, the most common approach for analyzing event
+times is to model the <em>hazard rate</em> of event occurrence. Let
+<span class="math inline">\(T\)</span> denote a continuous event time
+variable, taking some value in the interval <span class="math inline">\((0,\infty)\)</span>. The <em>continuous time
+hazard rate</em> <span class="math inline">\(\lambda(t)\)</span> is
+defined to be the “instantaneous risk” of event occurrence at time <span class="math inline">\(t\)</span> given the event of interest has not yet
+occurred prior to <span class="math inline">\(t\)</span>: <span class="math display">\[
+\lambda(t)=\lim_{dt\rightarrow 0} \frac{P(t\leq T \leq t+dt)}{dt\cdot
+P(T\geq t)}
+\]</span> The <em>continuous time Cox proportional hazards model</em>
+then models these hazard rates with: <span class="math display">\[
+\lambda(t)=\lambda_0(t)\text{exp}(\beta_1X_1+\cdots\beta_MX_M)=\text{exp}(f_0(t)+\beta_1X_1+\cdots\beta_MX_M)
+\]</span> where <span class="math inline">\(\lambda_0(t)\)</span> is an
+arbitrary function of time <span class="math inline">\(t\)</span> called
+a <em>baseline hazard</em> (and <span class="math inline">\(f_0(t)=\text{log}(\lambda_0(t))\)</span> is this
+same baseline hazard on a log scale) and <span class="math inline">\(X_1,\ldots,X_M\)</span> are covariate values <span class="citation">(<a href="#ref-cox1972">Cox 1972</a>)</span>. Taking
+logarithms of both sides of this equation yields an equivalent form of
+our continuous time Cox model: <span class="math display">\[
+\text{log}(\lambda(t)) = \eta(t) = f_0(t)+\beta_1X_1+\cdots\beta_MX_M
+\]</span> where <span class="math inline">\(\eta(t)\)</span> is the
+<em>linear predictor</em> incorporating both the time effects and other
+covariate effects.</p>
+<p>As with continuous time, with discrete time we will also model the
+<em>hazard rate</em> of event occurrence. Let <span class="math inline">\(T\)</span> now denote the discrete time of event
+occurrence, and we assume the possible discrete time points are labeled
+with the positive integers. So for example, if the event of interest
+occurs at the third discrete time point, then <span class="math inline">\(T=3\)</span>. If there is only a single event type
+(i.e., no competing risks), we define the <em>discrete time hazard
+rate</em> <span class="math inline">\(\lambda(t)\)</span> to be the
+probability of event occurrence at time <span class="math inline">\(t\)</span> given the event has not already
+occurred at an earlier time point: <span class="math display">\[\lambda(t)=P(T=t|T\geq t)\]</span> Unlike with
+the continuous time hazard rate (which may take any value between 0 and
+<span class="math inline">\(\infty\)</span>), the discrete time hazard
+rate is a probability and is thus bounded between 0 and 1. Hence, we
+relate <span class="math inline">\(\lambda(t)\)</span> to a linear
+predictor <span class="math inline">\(\eta(t)\)</span> encapsulating
+covariate effects (including the effect of time <span class="math inline">\(t\)</span>) using the <em>logit link function</em>
+(just as in logistic regression): <span class="math display">\[
+\text{log}\left(\frac{\lambda(t)}{1-\lambda(t)}\right) = \eta(t) =
+f_0(t)+\beta_1X_1+\cdots\beta_MX_M
+\]</span> Here, for the discrete time model, proportionality is now
+technically in the <em>odds</em> of the hazard. However, for simplicity
+we will still refer to this as the <em>discrete time Cox proportional
+hazards model</em>.</p>
+</div>
+<div id="expanding-data-to-person-time-format" class="section level4">
+<h4>Expanding Data to Person-Time Format</h4>
+<p>The discrete Cox model is recognizable as being identical to
+<em>logistic regression</em>. However, the difference here is that we
+must include one logistic regression observation <em>for each discrete
+time point <span class="math inline">\(t\)</span> each sample member was
+at risk for event occurrence</em> in order to model the aggregate risk
+experienced by each sample member. To illustrate, suppose we have the
+following data set:</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>T</th>
+<th><span class="math inline">\(\delta\)</span></th>
+<th>age</th>
+<th>gender</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>01</td>
+<td>3</td>
+<td>1</td>
+<td>24</td>
+<td>M</td>
+</tr>
+<tr>
+<td>02</td>
+<td>2</td>
+<td>0</td>
+<td>27</td>
+<td>F</td>
+</tr>
+<tr>
+<td><span class="math inline">\(\vdots\)</span></td>
+<td><span class="math inline">\(\vdots\)</span></td>
+<td><span class="math inline">\(\vdots\)</span></td>
+<td><span class="math inline">\(\vdots\)</span></td>
+<td><span class="math inline">\(\vdots\)</span></td>
+</tr>
+<tr>
+<td>50</td>
+<td>5</td>
+<td>1</td>
+<td>33</td>
+<td>F</td>
+</tr>
+</tbody>
+</table>
+<p>where ID is a subject id number, <span class="math inline">\(T\)</span> is <em>study time</em> (the time of
+either event occurrence or right censoring), <span class="math inline">\(\delta\)</span> is an event indicator (1 for event
+occurrence, 0 for right censoring), and age and gender are covariates.
+For instance, the first study subject did <em>not</em> experience the
+event of interest at times <span class="math inline">\(t=1\)</span> or
+<span class="math inline">\(t=2\)</span> but <em>did</em> experience the
+event of interest at time <span class="math inline">\(t=3\)</span>.</p>
+<p>To fit the discrete Cox model to this data, we must first expand the
+data set to <em>person-time format</em>, with <em>one row of data for
+each discrete time point each sample member was at risk for event
+occurrence</em>. The above data set would become:</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>t</th>
+<th>Y</th>
+<th>age</th>
+<th>gender</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>01</td>
+<td>1</td>
+<td>0</td>
+<td>24</td>
+<td>M</td>
+</tr>
+<tr>
+<td>01</td>
+<td>2</td>
+<td>0</td>
+<td>24</td>
+<td>M</td>
+</tr>
+<tr>
+<td>01</td>
+<td>3</td>
+<td>1</td>
+<td>24</td>
+<td>M</td>
+</tr>
+<tr>
+<td>02</td>
+<td>1</td>
+<td>0</td>
+<td>27</td>
+<td>F</td>
+</tr>
+<tr>
+<td>02</td>
+<td>2</td>
+<td>0</td>
+<td>27</td>
+<td>F</td>
+</tr>
+<tr>
+<td><span class="math inline">\(\vdots\)</span></td>
+<td><span class="math inline">\(\vdots\)</span></td>
+<td><span class="math inline">\(\vdots\)</span></td>
+<td><span class="math inline">\(\vdots\)</span></td>
+<td><span class="math inline">\(\vdots\)</span></td>
+</tr>
+<tr>
+<td>50</td>
+<td>1</td>
+<td>0</td>
+<td>33</td>
+<td>F</td>
+</tr>
+<tr>
+<td>50</td>
+<td>2</td>
+<td>0</td>
+<td>33</td>
+<td>F</td>
+</tr>
+<tr>
+<td>50</td>
+<td>3</td>
+<td>0</td>
+<td>33</td>
+<td>F</td>
+</tr>
+<tr>
+<td>50</td>
+<td>4</td>
+<td>0</td>
+<td>33</td>
+<td>F</td>
+</tr>
+<tr>
+<td>50</td>
+<td>5</td>
+<td>1</td>
+<td>33</td>
+<td>F</td>
+</tr>
+</tbody>
+</table>
+<p>where <span class="math inline">\(t\)</span> is the discrete time for
+that specific person-time observation, and <span class="math inline">\(Y\)</span> is an outcome indicator (<span class="math inline">\(Y=0\)</span> for no event occurring at that
+person-time point, and <span class="math inline">\(Y=1\)</span> for
+event occurrence). Note that when <span class="math inline">\(t=T\)</span> (i.e., it is the last discrete time
+point of observation for a sample member), <span class="math inline">\(Y=\delta\)</span>. For example, study subject 02
+was observed for two discrete time points, and because her <span class="math inline">\(\delta\)</span> value is 0, her <span class="math inline">\(Y\)</span> value at her second person-time point
+of observation is also 0. For all three study subjects depicted here, we
+assumed their ages remained constant across all discrete time points of
+observation. However, if we knew otherwise, we could easily calculate
+potentially distinct age values for each person-time observation.</p>
+</div>
+<div id="formatting-data-for-the-brea-package" class="section level4">
+<h4>Formatting Data for the <code>brea</code> Package</h4>
+<p>Once a data set has been expanded into person-time format, it may be
+fit via conventional logistic regression software (e.g., the
+<code>glm()</code> function with the <code>family=binomial</code>
+option; see the example later in this tutorial). The
+<code>brea_mcmc()</code> function from the <code>brea</code> package is
+based on logistic regression, but has one additional requirement:
+<em>All</em> predictor variables (including time <span class="math inline">\(t\)</span>) must be <em>specified</em> in a
+<em>categorical</em> manner, either by giving positive integer values
+<span class="math inline">\(k\)</span> (where <span class="math inline">\(k=1,\ldots,K\)</span> for some <span class="math inline">\(K\)</span>) or by using an R <code>factor</code>
+data type. The logistic regression model implementing the discrete Cox
+model then becomes:</p>
+<p><span class="math display">\[
+\text{log}\left(\frac{\lambda(t)}{1-\lambda(t)}\right) = \eta(t) =
+\beta_0 + \beta_1[X_1(t)] + \beta_2[X_2(t)] + \cdots + \beta_M[X_m(t)]
+\]</span> Here each predictor value <span class="math inline">\(X_m(t)\)</span> takes a positive integer value
+<span class="math inline">\(k\)</span> between <span class="math inline">\(1\)</span> and <span class="math inline">\(K_m\)</span>, and so the effects of the <span class="math inline">\(m^\text{th}\)</span> predictor are modeled on the
+logit scale by a collection of <span class="math inline">\(K_m\)</span>
+parameters <span class="math inline">\(\beta_m[1]\)</span>, <span class="math inline">\(\beta_m[2]\)</span>,…,<span class="math inline">\(\beta_m[K_m]\)</span>.</p>
+<p>Note that while the <em>specification</em> of covariate values must
+be <em>categorical</em>, <em>quantitative</em> covariates are still
+fully supported. To include a quantitative covariate, the user must
+first discretize the covariate (e.g., using the <code>cut()</code>
+function). This effectively means the potentially arbitrary smooth
+relationship between the covariate and the hazard will be approximated
+by a <em>step function</em>. To increase the amount of smoothness, a
+finer discretization (with a larger number <span class="math inline">\(K_m\)</span> of categories) may be used.
+<em>Gaussian Markov random field (GMRF)</em> prior distributions are
+then used for the parameter values <span class="math inline">\(\beta_m[1]\)</span>, <span class="math inline">\(\beta_m[2]\)</span>,…,<span class="math inline">\(\beta_m[K_m]\)</span> to ensure
+regularity/smoothness of the functional relationship even if the
+discretization is fine. See <span class="citation">(<a href="#ref-kingweiss2021">King and Weiss 2021</a>)</span> and the
+practical example later in this tutorial for more details.</p>
+</div>
+</div>
+<div id="bayesian-inference-via-mcmc-simulation" class="section level3">
+<h3>Bayesian Inference via MCMC Simulation</h3>
+<p>In Bayesian statistics, information and uncertainty about model
+parameters is encapsulated by probability distributions for those
+parameters. We briefly discuss these distributions, and then describe
+how to obtain inferential results by numerically sampling from the
+posterior distribution.</p>
+<div id="prior-and-posterior-distributions" class="section level4">
+<h4>Prior and Posterior Distributions</h4>
+<p>The probability distribution we use to capture knowledge we have
+about model parameters <em>prior</em> to seeing the sample data is
+called the <em>prior distribution</em>. For example, if had reason to
+believe that a model parameter <span class="math inline">\(\mu\)</span>
+was equal to 5, then we could use a prior distribution for <span class="math inline">\(\mu\)</span> with a mean of 5. Furthermore, if we
+were roughly 95% sure (prior to seeing the sample data) that <span class="math inline">\(\mu\)</span> is between 1 and 9, then we could use
+a <span class="math inline">\(N(5,2^2)\)</span> (i.e., a normal
+distribution with a mean of 5 and a standard deviation of 2) prior
+distribution for <span class="math inline">\(\mu\)</span>, since for
+this distribution roughly 95% of its probability is between 1 and 9:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">pnorm</span>(<span class="dv">9</span>,<span class="dv">5</span>,<span class="dv">2</span>)<span class="sc">-</span><span class="fu">pnorm</span>(<span class="dv">1</span>,<span class="dv">5</span>,<span class="dv">2</span>)</span></code></pre></div>
+<pre><code>## [1] 0.9544997</code></pre>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">qnorm</span>(<span class="fu">c</span>(<span class="fl">0.025</span>,<span class="fl">0.975</span>),<span class="dv">5</span>,<span class="dv">2</span>)</span></code></pre></div>
+<pre><code>## [1] 1.080072 8.919928</code></pre>
+<p>With our modeling approach, we will generally use <em>noninformative
+priors</em> that specify little, if any, prior information about the
+model parameters (other than, for example, the fact that adjacent step
+heights in a step function approximation of a smooth curve are close
+together). We will illustrate how to do this in the practical example,
+and users of the <code>brea</code> package will generally <em>not</em>
+have to be concerned with developing prior distribution specifications
+beyond “default” noninformative priors.</p>
+<p>The <em>posterior distribution</em> combines the information about
+the model parameters from the prior distribution with the information
+from the sample data to produce a <em>single probability
+distribution</em> that encapsulates our most up-to-date state of
+knowledge about the parameters. The posterior distribution is the
+primary “output” or “result” or “inference” in a Bayesian analysis.</p>
+</div>
+<div id="inference-via-mcmc-sampling-from-the-posterior-distribution" class="section level4">
+<h4>Inference via MCMC Sampling from the Posterior Distribution</h4>
+<p>Mathematically, the posterior distribution is completely determined
+by the combination of the prior distribution, statistical model, and
+sample data. In all but the simplest cases, this probability
+distribution doesn’t have some simple form that we can determine using
+algebra or calculus. Instead, the only practical way to learn about this
+distribution is to <em>take a random sample from the posterior
+distribution</em>. Note that here we are talking about using computer
+simulation algorithms to draw a random sample from the posterior
+probability distribution of the <em>model parameters</em>, and this
+sample is completely different from the <em>sample data</em> that we are
+analyzing.</p>
+<p>The most common way of selecting a random sample from the posterior
+distribution is via a numerical algorithm called <em>Markov chain Monte
+Carlo</em>, or <em>MCMC</em> for short. This is the algorithm used by
+the <code>brea_mcmc()</code> function we will use later. One important
+difference between a random sample drawn using an MCMC algorithm and a
+<em>simple random sample (SRS)</em> that the user may be familiar with
+is that unlike with an SRS sample, the values from an MCMC sample are
+<em>not independent of each other</em>. Specifically, MCMC generates
+values for the sample as a <em>sequence</em>, and successive elements of
+the sequence tend to be more similar to each other than independently
+drawn values (i.e., the sequence of sampled values exhibits positive
+<em>autocorrelation</em>).</p>
+<p>As a result, for a given sample size <span class="math inline">\(S\)</span>, there is usually much less information
+in a sample drawn using MCMC than an independent SRS sample. So while we
+may draw a sample of size <span class="math inline">\(S\)</span> using
+MCMC, the <em>effective sample size</em> (the size of an independent SRS
+sample that would contain the same amount of information as the MCMC
+sample) is often 10 or even 100 times smaller than <span class="math inline">\(S\)</span>. In the practical example later, we
+will show how to calculate the effective sample size using the
+<code>effectiveSize()</code> function from the <code>coda</code>
+package; for publication-quality inferences, we recommend choosing the
+MCMC sample size <span class="math inline">\(S\)</span> so that the
+effective sample size is at least 1,000 (which may necessitate choosing
+<span class="math inline">\(S=10,000\)</span> or even <span class="math inline">\(S=100,000\)</span>).</p>
+<p>Once we have obtained a sample from the posterior distribution, it is
+very easy to obtain the types of inferential results the user is
+familiar with from fitting frequentist models. Specifically, we may
+obtain a <em>point estimate</em> of a specific model parameter by
+calculating the mean or median of the MCMC sample for that parameter.
+Similarly, we may obtain a <em>confidence interval</em> (CI, which
+Bayesians often call <em>credible intervals</em>) for a model parameter
+by calculating <em>quantiles</em> of the sampled values of that
+parameter. For example, we could find the endpoints of a 95% CI by
+calculating the <span class="math inline">\(2.5^\text{th}\)</span>
+percentile and <span class="math inline">\(97.5^\text{th}\)</span>
+percentile of the posterior MCMC sample for the desired parameter. We
+illustrate this in the practical example below.</p>
+</div>
+</div>
+</div>
+<div id="detailed-example-of-a-simple-cox-model" class="section level2">
+<h2>Detailed Example of a Simple Cox Model</h2>
+<p>We now apply both classical frequentist models and our
+<code>brea</code> model to the first data set ever used for a Cox
+proportional hazards model, namely the leukemia remission data from
+<span class="citation">(<a href="#ref-cox1972">Cox 1972</a>)</span>.
+This data came from a clinical trial of acute leukemia patients with two
+treatment groups, the drug 6-mercaptopurine (6-MP) and a placebo
+control. There were <span class="math inline">\(n=42\)</span> patients
+in total with 21 assigned to each group. The outcome of interest was the
+duration of leukemia remission (i.e., the <em>event of interest</em> was
+the <em>end</em> of cancer remission, so <em>lower</em> hazard of event
+occurrence is better). These durations were measured in whole weeks, so
+time here is discrete. The data appear below:</p>
+<table>
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Treatment Group</th>
+<th>Observed Duration of Remission (weeks) (* denotes right-censored
+observations)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Group 0 (6-MP)</td>
+<td>6*, 6, 6, 6, 7, 9*, 10*,10, 11*, 13, 16, 17*, 19*, 20*, 22, 23, 25*,
+32*, 32*, 34*, 35*</td>
+</tr>
+<tr>
+<td>Group 1 (control)</td>
+<td>1, 1, 2, 2, 3, 4, 4, 5, 5, 8, 8, 8, 8, 11, 11, 12, 12, 15, 17, 22,
+23</td>
+</tr>
+</tbody>
+</table>
+<p>We will first prepare and analyze this data with a continuous time
+Cox proportional hazards model via the <code>survival</code> package.
+Then we will use a discrete time Cox model approach, implemented with
+both vanilla logistic regression and finally with the <code>brea</code>
+package.</p>
+<div id="classical-partial-likelihood-inference-using-coxph" class="section level3">
+<h3>Classical Partial Likelihood Inference using
+<code>coxph()</code></h3>
+<p>We begin by creating separate variables for the study time variable
+<code>time</code> (time of event occurrence or right censoring), the
+event/censoring indicator variable <code>event</code> (1 for event
+occurrence, 0 for right censoring), and the treatment group variable
+<code>treat</code> (0 for treatment, 1 for control):</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>time <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">6</span>,<span class="dv">6</span>,<span class="dv">6</span>,<span class="dv">6</span>,<span class="dv">7</span>,<span class="dv">9</span>,<span class="dv">10</span>,<span class="dv">10</span>,<span class="dv">11</span>,<span class="dv">13</span>,<span class="dv">16</span>,<span class="dv">17</span>,<span class="dv">19</span>,<span class="dv">20</span>,<span class="dv">22</span>,<span class="dv">23</span>,<span class="dv">25</span>,<span class="dv">32</span>,<span class="dv">32</span>,<span class="dv">34</span>,<span class="dv">35</span>,</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>          <span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">5</span>,<span class="dv">8</span>,<span class="dv">8</span>,<span class="dv">8</span>,<span class="dv">8</span>,<span class="dv">11</span>,<span class="dv">11</span>,<span class="dv">12</span>,<span class="dv">12</span>,<span class="dv">15</span>,<span class="dv">17</span>,<span class="dv">22</span>,<span class="dv">23</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>event <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>           <span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>treat <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">rep</span>(<span class="dv">0</span>,<span class="dv">21</span>),<span class="fu">rep</span>(<span class="dv">1</span>,<span class="dv">21</span>))</span></code></pre></div>
+<p>Next, we load the <code>survival</code> package and define our
+outcome variable <code>y</code> to be a survival object of class
+<code>Surv</code>:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">library</span>(survival)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">Surv</span>(time,event)</span></code></pre></div>
+<p>Finally, we fit the Cox proportional hazards model and summarize the
+results:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>cph_fit <span class="ot">&lt;-</span> <span class="fu">coxph</span>(y <span class="sc">~</span> treat)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="fu">summary</span>(cph_fit)</span></code></pre></div>
+<pre><code>## Call:
+## coxph(formula = y ~ treat)
+## 
+##   n= 42, number of events= 30 
+## 
+##         coef exp(coef) se(coef)     z Pr(&gt;|z|)    
+## treat 1.5721    4.8169   0.4124 3.812 0.000138 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##       exp(coef) exp(-coef) lower .95 upper .95
+## treat     4.817     0.2076     2.147     10.81
+## 
+## Concordance= 0.69  (se = 0.041 )
+## Likelihood ratio test= 16.35  on 1 df,   p=5e-05
+## Wald test            = 14.53  on 1 df,   p=1e-04
+## Score (logrank) test = 17.25  on 1 df,   p=3e-05</code></pre>
+<p>The estimated coefficient <span class="math inline">\(\beta_1\)</span> of the treatment variable
+<code>treat</code> is 1.5721251. Since this value represents a log
+hazard rate ratio, we exponentiate it to obtain the hazard ratio
+estimate 4.8168739. Hence, we estimate the risk of remission ending is
+4.82 times greater in the placebo group than in the 6-MP group. We may
+also obtain and interpret confidence intervals for <code>treat</code>’s
+coefficient <span class="math inline">\(\beta_1\)</span> or its
+exponentiated version:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">confint</span>(cph_fit)</span></code></pre></div>
+<pre><code>##           2.5 %   97.5 %
+## treat 0.7638424 2.380408</code></pre>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">exp</span>(<span class="fu">confint</span>(cph_fit))</span></code></pre></div>
+<pre><code>##          2.5 %   97.5 %
+## treat 2.146508 10.80931</code></pre>
+<p>We can be 95% sure that the chances of cancer remission ending is
+between 2.15 and 10.81 times more likely for patients who receive
+placebo when compared to patients who receive the 6-MP treatment. Thus,
+we have statistically significant evidence that the 6-MP treatment is
+highly effective at maintaining remission.</p>
+<p>Note that <code>coxph()</code> treats the event times as
+<em>continuous</em>, despite the fact that the event times have been
+grouped into whole weeks (and are thus <em>discrete</em>). This grouping
+has resulted in numerous <em>tied observations</em>, which are sample
+members with the exact same observed event time (e.g., four members of
+the control group all experienced the event of interest at time <span class="math inline">\(t=8\)</span>). With truly continuous data, ties
+would be impossible, and the partial likelihood model fitting method
+must be adjusted to allow for fitting with tied data. Several different
+such adjustments are available in <code>coxph()</code>, including the
+<code>efron</code> method (the default), the <code>breslow</code>
+method, and the <code>exact</code> method, which yield different though
+qualitatively similar results:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">coxph</span>(y <span class="sc">~</span> treat,<span class="at">ties=</span><span class="st">&quot;efron&quot;</span>)</span></code></pre></div>
+<pre><code>## Call:
+## coxph(formula = y ~ treat, ties = &quot;efron&quot;)
+## 
+##         coef exp(coef) se(coef)     z        p
+## treat 1.5721    4.8169   0.4124 3.812 0.000138
+## 
+## Likelihood ratio test=16.35  on 1 df, p=5.261e-05
+## n= 42, number of events= 30</code></pre>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="fu">coxph</span>(y <span class="sc">~</span> treat,<span class="at">ties=</span><span class="st">&quot;breslow&quot;</span>)</span></code></pre></div>
+<pre><code>## Call:
+## coxph(formula = y ~ treat, ties = &quot;breslow&quot;)
+## 
+##         coef exp(coef) se(coef)     z        p
+## treat 1.5092    4.5231   0.4096 3.685 0.000229
+## 
+## Likelihood ratio test=15.21  on 1 df, p=9.615e-05
+## n= 42, number of events= 30</code></pre>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="fu">coxph</span>(y <span class="sc">~</span> treat,<span class="at">ties=</span><span class="st">&quot;exact&quot;</span>)</span></code></pre></div>
+<pre><code>## Call:
+## coxph(formula = y ~ treat, ties = &quot;exact&quot;)
+## 
+##         coef exp(coef) se(coef)     z       p
+## treat 1.6282    5.0949   0.4331 3.759 0.00017
+## 
+## Likelihood ratio test=16.25  on 1 df, p=5.544e-05
+## n= 42, number of events= 30</code></pre>
+<p>In summary, the classic Cox proportional hazards model yields hazard
+rate ratio estimates of 4.52, 4.82, and 5.09, depending on the method
+for handling ties.</p>
+</div>
+<div id="discrete-time-survival-data-preparation" class="section level3">
+<h3>Discrete Time Survival Data Preparation</h3>
+<p>Here we will expand the data into <em>person-time format</em>, with
+one observation for each discrete time point each patient was at risk
+for event occurrence. We begin by setting the total number of
+person-time observations <code>N</code> and creating matrices of height
+<code>N</code> to store the predictor values <code>x</code> (with first
+column subject id, second column time, and third column treatment group)
+and binary response variable <code>y</code>:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a>N <span class="ot">&lt;-</span> <span class="fu">sum</span>(time) <span class="co"># total number of person-time observations</span></span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>,N,<span class="dv">3</span>)  <span class="co"># columns id, time, and treatment group</span></span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a><span class="fu">colnames</span>(x) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;id&quot;</span>,<span class="st">&quot;t&quot;</span>,<span class="st">&quot;treat&quot;</span>)</span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>,N,<span class="dv">1</span>) <span class="co"># only one column since only one competing risk</span></span></code></pre></div>
+<p>Next we iterate through the 42 observations in the original
+(unexpanded) data set, expanding each one and adding the corresponding
+rows to <code>x</code> and <code>y</code>:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a>next_row <span class="ot">&lt;-</span> <span class="dv">1</span>  <span class="co"># next available row in the person-time matrices</span></span>
+<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(time)) {</span>
+<span id="cb20-3"><a href="#cb20-3" tabindex="-1"></a>  rows <span class="ot">&lt;-</span> next_row<span class="sc">:</span>(next_row <span class="sc">+</span> time[i] <span class="sc">-</span> <span class="dv">1</span>)  <span class="co"># person-time rows to fill</span></span>
+<span id="cb20-4"><a href="#cb20-4" tabindex="-1"></a>  x[rows,<span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="fu">rep</span>(i,time[i]) <span class="co"># subject id number is constant for each person</span></span>
+<span id="cb20-5"><a href="#cb20-5" tabindex="-1"></a>  x[rows,<span class="dv">2</span>] <span class="ot">&lt;-</span> <span class="fu">seq_len</span>(time[i])  <span class="co"># discrete time is integers 1,2,...,time[i]</span></span>
+<span id="cb20-6"><a href="#cb20-6" tabindex="-1"></a>  x[rows,<span class="dv">3</span>] <span class="ot">&lt;-</span> <span class="fu">rep</span>(treat[i],time[i])  <span class="co"># treatment group is constant</span></span>
+<span id="cb20-7"><a href="#cb20-7" tabindex="-1"></a>  y[rows,<span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">rep</span>(<span class="dv">0</span>,time[i] <span class="sc">-</span> <span class="dv">1</span>),event[i])  <span class="co"># outcome is 0&#39;s until study time</span></span>
+<span id="cb20-8"><a href="#cb20-8" tabindex="-1"></a>  next_row <span class="ot">&lt;-</span> next_row <span class="sc">+</span> time[i]  <span class="co"># increment the next available row pointer</span></span>
+<span id="cb20-9"><a href="#cb20-9" tabindex="-1"></a>}</span></code></pre></div>
+<p>Let’s view the data from the first two study subjects in both the
+original and expanded forms to confirm this worked as intended:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a>original_data <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">id=</span><span class="fu">seq_along</span>(time),time,event,treat)</span>
+<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a><span class="fu">head</span>(original_data,<span class="dv">2</span>)</span></code></pre></div>
+<pre><code>##   id time event treat
+## 1  1    6     0     0
+## 2  2    6     1     0</code></pre>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a>expanded_data <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(x,y)</span>
+<span id="cb23-2"><a href="#cb23-2" tabindex="-1"></a><span class="fu">head</span>(expanded_data,<span class="dv">12</span>)</span></code></pre></div>
+<pre><code>##    id t treat y
+## 1   1 1     0 0
+## 2   1 2     0 0
+## 3   1 3     0 0
+## 4   1 4     0 0
+## 5   1 5     0 0
+## 6   1 6     0 0
+## 7   2 1     0 0
+## 8   2 2     0 0
+## 9   2 3     0 0
+## 10  2 4     0 0
+## 11  2 5     0 0
+## 12  2 6     0 1</code></pre>
+<p>We can see that the data from the first two members of the original
+sample were correctly expanded into person-time format: The first six
+person-time rows are for subject number 1, while the second six are for
+subject number 2 (since both of the first two subjects were observed for
+six discrete time points each). In addition, the only event observed for
+these two subjects was at the sixth discrete time point
+(<code>t=6</code>) for the second subject (<code>id=2</code>), so that
+is the only row of the person-time data from the first two subjects
+where <code>y=1</code>.</p>
+</div>
+<div id="frequentist-logistic-regression-inference-using-glm" class="section level3">
+<h3>Frequentist Logistic Regression Inference using
+<code>glm()</code></h3>
+<p>Before we apply logistic regression to the expanded person-time data
+set, we must decide how to model the effect of discrete time <span class="math inline">\(t\)</span> on the hazard of event occurrence.
+Recall that the discrete time Cox proportional hazards model includes an
+arbitrary function of time <span class="math inline">\(f_0(t)\)</span>
+(known as a baseline hazard):</p>
+<p><span class="math display">\[
+\text{log}\left(\frac{\lambda(t)}{1-\lambda(t)}\right) = \eta(t) =
+f_0(t)+\beta_1X_1+\cdots\beta_MX_M
+\]</span> Since here we will only be using standard logistic regression
+software via the <code>glm()</code> function (as opposed to a
+<em>generalized additive model</em> which would allow inclusion of
+arbitrary smooth functions <span class="math inline">\(f()\)</span>
+inside the linear predictor <span class="math inline">\(\eta(t)\)</span>), we must use an alternative way
+of modeling the effect of discrete time <span class="math inline">\(t\)</span> on the hazard of event occurrence. Two
+readily available choices would be to include a polynomial function of
+discrete time <span class="math inline">\(t\)</span> (e.g., a linear or
+quadratic function) or to group discrete time <span class="math inline">\(t\)</span> into intervals and treat it
+categorically. We consider each of these in turn.</p>
+<div id="polynomial-time-effect" class="section level4">
+<h4>Polynomial Time Effect</h4>
+<p>With linear modeling of the effect of time <span class="math inline">\(t\)</span>, our model becomes: <span class="math display">\[
+\text{log}\left(\frac{\lambda(t)}{1-\lambda(t)}\right) = \beta_0 +
+\beta_1X_1(t) + \beta_2X_2
+\]</span> where <span class="math inline">\(X_1(t)=t\)</span> is
+discrete time and <span class="math inline">\(X_2\)</span> is treatment
+group (0 for 6-MP, 1 for placebo). We may fit this logistic regression
+model to our person-time data set using the <code>glm()</code> function
+with the <code>family=binomial</code> option:</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a>linear_fit <span class="ot">&lt;-</span> <span class="fu">glm</span>(y <span class="sc">~</span> t <span class="sc">+</span> treat,<span class="at">family=</span>binomial,<span class="at">data=</span>expanded_data)</span>
+<span id="cb25-2"><a href="#cb25-2" tabindex="-1"></a><span class="fu">summary</span>(linear_fit)</span></code></pre></div>
+<pre><code>## 
+## Call:
+## glm(formula = y ~ t + treat, family = binomial, data = expanded_data)
+## 
+## Coefficients:
+##             Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept) -4.01627    0.50971  -7.880 3.29e-15 ***
+## t            0.02768    0.02745   1.008    0.313    
+## treat        1.77337    0.44334   4.000 6.33e-05 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 231.84  on 540  degrees of freedom
+## Residual deviance: 213.32  on 538  degrees of freedom
+## AIC: 219.32
+## 
+## Number of Fisher Scoring iterations: 6</code></pre>
+<p>We may then obtain a point estimate of the hazard rate ratio (the
+exponentiated coefficient of the treatment variable <span class="math inline">\(X_2\)</span>) using:</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" tabindex="-1"></a>beta2_hat <span class="ot">&lt;-</span> <span class="fu">coef</span>(linear_fit)[<span class="st">&quot;treat&quot;</span>]</span>
+<span id="cb27-2"><a href="#cb27-2" tabindex="-1"></a><span class="fu">exp</span>(beta2_hat)</span></code></pre></div>
+<pre><code>##    treat 
+## 5.890668</code></pre>
+<p>Note that technically this is an <em>odds ratio</em> estimate, not a
+<em>hazard ratio</em> estimate, since the discrete Cox model sets the
+log of the <em>odds</em> of the hazard equal to the linear predictor
+<span class="math inline">\(\eta(t)\)</span>. Odds ratios will generally
+tend to be more extreme (further from 1) than corresponding risk/hazard
+ratios, though when the probabilities are small (as they are for most
+discrete survival models), the differences are modest. We will
+informally still interpret odds ratio estimates from discrete Cox models
+as though they were hazard rate ratios.</p>
+<p>We may also try quadratic and cubic formulations for the time
+effect:</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" tabindex="-1"></a>quadratic_fit <span class="ot">&lt;-</span> <span class="fu">glm</span>(y <span class="sc">~</span> <span class="fu">poly</span>(t,<span class="dv">2</span>) <span class="sc">+</span> treat,<span class="at">family=</span>binomial,<span class="at">data=</span>expanded_data)</span>
+<span id="cb29-2"><a href="#cb29-2" tabindex="-1"></a><span class="fu">exp</span>(<span class="fu">coef</span>(quadratic_fit)[<span class="st">&quot;treat&quot;</span>])</span></code></pre></div>
+<pre><code>##    treat 
+## 5.550794</code></pre>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" tabindex="-1"></a>cubic_fit <span class="ot">&lt;-</span> <span class="fu">glm</span>(y <span class="sc">~</span> <span class="fu">poly</span>(t,<span class="dv">3</span>) <span class="sc">+</span> treat,<span class="at">family=</span>binomial,<span class="at">data=</span>expanded_data)</span>
+<span id="cb31-2"><a href="#cb31-2" tabindex="-1"></a><span class="fu">exp</span>(<span class="fu">coef</span>(cubic_fit)[<span class="st">&quot;treat&quot;</span>])</span></code></pre></div>
+<pre><code>##    treat 
+## 5.530024</code></pre>
+</div>
+<div id="step-function-time-effect" class="section level4">
+<h4>Step Function Time Effect</h4>
+<p>Next, we consider grouping discrete time t into non-overlapping
+intervals and treating the variable as categorical. This is equivalent
+to approximating the baseline hazard <span class="math inline">\(f_0(t)\)</span> with a <em>step function</em>.
+When doing frequentist inference with this approach, we must have at
+least one observed event in each interval of <span class="math inline">\(t\)</span> values, or else the corresponding
+parameter estimate for that interval will be <span class="math inline">\(-\infty\)</span> (since the hazard appears to be
+zero in that interval). Our dataset only contains 30 observed events,
+and the last time of event occurrence is <span class="math inline">\(t=23\)</span>. With such limited data, we follow
+the suggestion of <span class="citation">(<a href="#ref-cox1972">Cox
+1972</a>)</span> of dividing the variable range into intervals of length
+10 (with the exception of the last interval, which will have length 15
+in order to include the last time of observation):</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" tabindex="-1"></a>expanded_data<span class="sc">$</span>t_cat <span class="ot">&lt;-</span> <span class="fu">cut</span>(expanded_data<span class="sc">$</span>t,<span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">10</span>,<span class="dv">20</span>,<span class="dv">35</span>))</span></code></pre></div>
+<p>By doing a cross tabulation of the discrete time variable
+<code>t</code> in the expanded person-time data set with the new grouped
+version <code>t_cat</code>, we can verify that all discrete time
+observations have been grouped into the correct intervals:</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" tabindex="-1"></a><span class="fu">with</span>(expanded_data,<span class="fu">table</span>(t,t_cat))</span></code></pre></div>
+<pre><code>##     t_cat
+## t    (0,10] (10,20] (20,35]
+##   1      42       0       0
+##   2      40       0       0
+##   3      38       0       0
+##   4      37       0       0
+##   5      35       0       0
+##   6      33       0       0
+##   7      29       0       0
+##   8      28       0       0
+##   9      24       0       0
+##   10     23       0       0
+##   11      0      21       0
+##   12      0      18       0
+##   13      0      16       0
+##   14      0      15       0
+##   15      0      15       0
+##   16      0      14       0
+##   17      0      13       0
+##   18      0      11       0
+##   19      0      11       0
+##   20      0      10       0
+##   21      0       0       9
+##   22      0       0       9
+##   23      0       0       7
+##   24      0       0       5
+##   25      0       0       5
+##   26      0       0       4
+##   27      0       0       4
+##   28      0       0       4
+##   29      0       0       4
+##   30      0       0       4
+##   31      0       0       4
+##   32      0       0       4
+##   33      0       0       2
+##   34      0       0       2
+##   35      0       0       1</code></pre>
+<p>Indeed, we observe for example that all observations with
+<code>t</code> values between 1 and 10 have been correctly assigned to
+the interval <code>(0,10]</code>. Our discrete time Cox model with a
+step function baseline hazard is now as follows: <span class="math display">\[
+\text{log}\left(\frac{\lambda(t)}{1-\lambda(t)}\right) = \beta_0 +
+\beta_1X_1(t) + \beta_2X_2(t) + \beta_3X_3
+\]</span> where <span class="math inline">\(X_1(t)\)</span> is a
+dummy/indicator variable for the <em>second</em> interval <span class="math inline">\((10,20]\)</span> (i.e., <span class="math inline">\(X_1(t)=1\)</span> if <span class="math inline">\(t\in (10,20]\)</span> and <span class="math inline">\(X_1(t)=0\)</span> otherwise), <span class="math inline">\(X_2(t)\)</span> is a dummy/indicator variable for
+the <em>third</em> interval <span class="math inline">\((20,30]\)</span>
+(so the first interval <span class="math inline">\((0,10]\)</span> is
+the reference group), and <span class="math inline">\(X_3\)</span> is
+the treatment group variable. We may now fit this model:</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" tabindex="-1"></a>step_fit <span class="ot">&lt;-</span> <span class="fu">glm</span>(y <span class="sc">~</span> t_cat <span class="sc">+</span> treat,<span class="at">family=</span>binomial,<span class="at">data=</span>expanded_data)</span>
+<span id="cb36-2"><a href="#cb36-2" tabindex="-1"></a><span class="fu">summary</span>(step_fit)</span></code></pre></div>
+<pre><code>## 
+## Call:
+## glm(formula = y ~ t_cat + treat, family = binomial, data = expanded_data)
+## 
+## Coefficients:
+##              Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)   -3.9850     0.4311  -9.244  &lt; 2e-16 ***
+## t_cat(10,20]   0.3326     0.4526   0.735    0.462    
+## t_cat(20,35]   0.9364     0.6306   1.485    0.138    
+## treat          1.8372     0.4459   4.120 3.79e-05 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 231.84  on 540  degrees of freedom
+## Residual deviance: 212.16  on 537  degrees of freedom
+## AIC: 220.16
+## 
+## Number of Fisher Scoring iterations: 6</code></pre>
+<p>Our estimated hazard rate ratio <span class="math inline">\(\text{exp}(\hat \beta_3)\)</span> for the
+treatment effect is:</p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" tabindex="-1"></a><span class="fu">exp</span>(<span class="fu">coef</span>(step_fit)[<span class="st">&quot;treat&quot;</span>])</span></code></pre></div>
+<pre><code>##    treat 
+## 6.279227</code></pre>
+<p>We may also obtain a 95% CI for the hazard rate ratio as follows:</p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" tabindex="-1"></a><span class="fu">confint</span>(step_fit)</span></code></pre></div>
+<pre><code>## Waiting for profiling to be done...</code></pre>
+<pre><code>##                   2.5 %    97.5 %
+## (Intercept)  -4.9127924 -3.212701
+## t_cat(10,20] -0.6038059  1.193752
+## t_cat(20,35] -0.4157477  2.121095
+## treat         1.0011180  2.768136</code></pre>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" tabindex="-1"></a><span class="fu">exp</span>(<span class="fu">confint</span>(step_fit)[<span class="st">&quot;treat&quot;</span>,])</span></code></pre></div>
+<pre><code>## Waiting for profiling to be done...</code></pre>
+<pre><code>##     2.5 %    97.5 % 
+##  2.721323 15.928911</code></pre>
+<p>Hence, using this model we estimate that the hazard of remission
+ending is 6.28 times higher in the placebo group compared to the 6-MP
+group. In addition, we can be 95% sure the hazard is between 2.72 and
+15.93 times higher among placebo patients when compared to patients
+receiving the active treatment.</p>
+<p>Note that the effect estimate here is substantially larger in
+magnitude than for any of the other formulations we have considered thus
+far. This is due to our step function approximation of the baseline
+hazard (the time effect) being too crude (only having three steps). With
+our Bayesian approach in the next section, we will see how to fix
+this.</p>
+</div>
+</div>
+<div id="bayesian-inference-using-brea_mcmc" class="section level3">
+<h3>Bayesian Inference using <code>brea_mcmc()</code></h3>
+<p>The function <code>brea_mcmc()</code> from the <code>brea</code>
+package is used to fit a Bayesian version of our discrete time Cox
+proportional hazards model using a Markov chain Monte Carlo (MCMC)
+algorithm, as described earlier. Here we will illustrate how to use this
+function and interpret its output. We will end by comparing our results
+with both the frequentist continuous and discrete time Cox models.</p>
+<div id="setting-up-an-mcmc-run" class="section level4">
+<h4>Setting Up an MCMC Run</h4>
+<p>The <code>brea_mcmc()</code> function has the following function
+signature:</p>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" tabindex="-1"></a><span class="fu">brea_mcmc</span>(x, y, <span class="at">priors =</span> <span class="cn">NULL</span>, <span class="at">S =</span> <span class="dv">1000</span>, <span class="at">B =</span> <span class="dv">100</span>, <span class="at">n =</span> <span class="cn">NULL</span>, <span class="at">K =</span> <span class="cn">NULL</span>, <span class="at">store_re =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<p>The only required arguments the user must specify are <code>x</code>
+and <code>y</code>, which specify, respectively, the predictor values
+and event occurrence status for each person-time observation of the
+expanded data set. More specifically, <code>y</code> is a vector of
+length <code>N</code> or a matrix of height <code>N</code> with a single
+column (or with multiple columns if there are competing risks), where
+<code>N</code> is the number of person-time observations. Each entry of
+<code>y</code> is either 0 (if the event of interest did not occur at
+that person-time observation) or 1 (if the event of interest did occur).
+The <code>y</code> variable we created earlier meets these requirements
+without further modification.</p>
+<p>The <code>x</code> variable used to specify covariates at the
+person-time level may either be a matrix or dataframe with
+<code>N</code> rows. <em>All</em> predictors must use a categorical
+formulation (though often the categories represent steps in a step
+function approximation of an arbitrary smooth function of a numerical
+predictor). The categories of each categorical predictor are represented
+either by positive whole number values or by R <code>factor</code>
+variables (factors are only possible if <code>x</code> is a data frame;
+if <code>x</code> is a matrix, then <code>x</code> must be numeric).</p>
+<p>We will now construct a numeric matrix <code>x</code> that meets the
+above requirements. First, we will use the same grouping of discrete
+time <code>t</code> into three intervals as used in the previous
+section. We will also change the coding of the treatment indicator to
+take values 1 and 2 instead of 0 and 1:</p>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" tabindex="-1"></a>x_brea <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>,N,<span class="dv">2</span>)</span>
+<span id="cb47-2"><a href="#cb47-2" tabindex="-1"></a>x_brea[,<span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="fu">cut</span>(expanded_data<span class="sc">$</span>t,<span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">10</span>,<span class="dv">20</span>,<span class="dv">35</span>),<span class="at">labels=</span><span class="cn">FALSE</span>) <span class="co"># grouped time t</span></span>
+<span id="cb47-3"><a href="#cb47-3" tabindex="-1"></a>x_brea[,<span class="dv">2</span>] <span class="ot">&lt;-</span> expanded_data<span class="sc">$</span>treat <span class="sc">+</span> <span class="dv">1</span> <span class="co"># treatment group</span></span></code></pre></div>
+<p>Typically, users will also specify the <code>priors</code> argument,
+which determines <em>both</em> the covariate type (categorical fixed
+effects, quantitative covariates with step function approximations of
+the effects, or random effects) and any parameters for its corresponding
+prior distribution. However, for this first <code>brea</code> model, we
+will be treating both predictors as categorical fixed effects and be
+using corresponding noninformative priors. Since this is the default
+specification (when <code>NULL</code> is supplied for the
+<code>priors</code> argument), we do not have to provide this
+argument.</p>
+<p>We may then load the <code>brea</code> package and obtain a sample
+from the posterior distribution of the model parameters (“fitting” the
+model in the Bayesian sense) as follows:</p>
+<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" tabindex="-1"></a><span class="fu">library</span>(brea)</span>
+<span id="cb48-2"><a href="#cb48-2" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb48-3"><a href="#cb48-3" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">brea_mcmc</span>(x_brea,y)</span></code></pre></div>
+<p>Note that since the MCMC algorithm uses random number generation, we
+set the seed of the random number generator to ensure our results are
+reproducible.</p>
+</div>
+<div id="extracting-and-examining-results" class="section level4">
+<h4>Extracting and Examining Results</h4>
+<p>The structure of the R object returned by <code>brea_mcm()</code> is
+below:</p>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" tabindex="-1"></a><span class="fu">str</span>(fit)</span></code></pre></div>
+<pre><code>## List of 4
+##  $ b_0_s: num [1, 1:1000] -2.77 -3.1 -2.98 -2.95 -2.48 ...
+##  $ b_m_s:List of 2
+##   ..$ : num [1, 1:3, 1:1000] -0.2452 -0.059 0.3043 0.0227 0.2089 ...
+##   ..$ : num [1, 1:2, 1:1000] -0.795 0.795 -0.735 0.735 -0.879 ...
+##  $ s_m_s:List of 2
+##   ..$ : NULL
+##   ..$ : NULL
+##  $ b_m_a:List of 2
+##   ..$ : int [1:3] 450 446 483
+##   ..$ : int [1:2] 457 470</code></pre>
+<p>This object is a list with two components of interest to us (as well
+as a few that do not concern us now): <code>b_0_s</code> contains the
+posterior sampled values of the intercept parameter <span class="math inline">\(\beta_0\)</span>, and <code>b_m_s</code> contains
+posterior sampled values of the parameters <span class="math inline">\(\beta_m[k]\)</span>, where <span class="math inline">\(\beta_m[k]\)</span> represents the effect of the
+<span class="math inline">\(k^\text{th}\)</span> covariate value
+(category) of the <span class="math inline">\(m^\text{th}\)</span>
+predictor on the hazard of event occurrence. Specifically, the <span class="math inline">\(s^\text{th}\)</span> sampled value (post burn-in)
+of <span class="math inline">\(\beta_m[k]\)</span> is stored in
+<code>b_m_s[[m]][1,k,s]</code> (the 1 index in <code>[1,k,s]</code>
+denotes that we are examining the <em>first</em> competing risk, which
+must be specified even in cases like this where there is only one
+competing risk). In particular, for our model in question,
+<code>m=2</code> represents the treatment variable (since treatment is
+the <em>second</em> column of the <code>x_brea</code> matrix we
+supplied), <code>k=1</code> represents the 6-MP treatment, and
+<code>k=2</code> represents the placebo control group. Hence, MCMC
+samples of the treatment effect (on the linear predictor scale) may be
+calculated as follows:</p>
+<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" tabindex="-1"></a>b_treatment <span class="ot">&lt;-</span> fit<span class="sc">$</span>b_m_s[[<span class="dv">2</span>]][<span class="dv">1</span>,<span class="dv">1</span>,]</span>
+<span id="cb51-2"><a href="#cb51-2" tabindex="-1"></a>b_control <span class="ot">&lt;-</span> fit<span class="sc">$</span>b_m_s[[<span class="dv">2</span>]][<span class="dv">1</span>,<span class="dv">2</span>,]</span>
+<span id="cb51-3"><a href="#cb51-3" tabindex="-1"></a>d <span class="ot">&lt;-</span> b_control <span class="sc">-</span> b_treatment <span class="co"># sampled values of treatment effect on logit scale</span></span></code></pre></div>
+<p>We may then obtain point estimates and a standard error estimate of
+the treatment effect on the linear predictor (logit) scale, and compare
+it to the results from fitting a frequentist version of this model using
+<code>glm()</code> earlier:</p>
+<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" tabindex="-1"></a><span class="fu">mean</span>(d) <span class="co"># posterior mean point estimate</span></span></code></pre></div>
+<pre><code>## [1] 1.873343</code></pre>
+<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" tabindex="-1"></a><span class="fu">median</span>(d) <span class="co"># posterior median point estimate</span></span></code></pre></div>
+<pre><code>## [1] 1.841043</code></pre>
+<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" tabindex="-1"></a><span class="fu">sd</span>(d) <span class="co"># posterior standard deviation (standard error)</span></span></code></pre></div>
+<pre><code>## [1] 0.439673</code></pre>
+<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" tabindex="-1"></a><span class="fu">summary</span>(step_fit) <span class="co"># identical frequentist model fit with glm() earlier</span></span></code></pre></div>
+<pre><code>## 
+## Call:
+## glm(formula = y ~ t_cat + treat, family = binomial, data = expanded_data)
+## 
+## Coefficients:
+##              Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)   -3.9850     0.4311  -9.244  &lt; 2e-16 ***
+## t_cat(10,20]   0.3326     0.4526   0.735    0.462    
+## t_cat(20,35]   0.9364     0.6306   1.485    0.138    
+## treat          1.8372     0.4459   4.120 3.79e-05 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 231.84  on 540  degrees of freedom
+## Residual deviance: 212.16  on 537  degrees of freedom
+## AIC: 220.16
+## 
+## Number of Fisher Scoring iterations: 6</code></pre>
+<p>As we can see, “fitting” the Bayesian version of this discrete Cox
+model gives almost exactly the same results as fitting the frequentist
+version using <code>glm()</code>.</p>
+</div>
+<div id="assessing-mcmc-performance-and-adjusting-mcmc-run-length-s" class="section level4">
+<h4>Assessing MCMC Performance and Adjusting MCMC Run Length S</h4>
+<p>As described earlier, with our Bayesian approach, we obtain
+inferences by taking a sample from the posterior distribution of the
+relevant model parameters using an MCMC algorithm. How accurately this
+posterior sample describes the posterior distribution depends on two
+things: how much <em>serial correlation</em> (<em>autocorrelation</em>)
+is present in the MCMC sample, and the size of the MCMC sample <span class="math inline">\(S\)</span> (which is the length of the MCMC
+chain). We may visualize the sequence of sampled values using a
+<em>trace plot</em>, which plots the MCMC iteration number along the
+horizontal axis and the sampled parameter value along the vertical
+axis:</p>
+<div class="sourceCode" id="cb60"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" tabindex="-1"></a><span class="fu">par</span>(<span class="at">cex=</span><span class="fl">0.66</span>,<span class="at">mgp=</span><span class="fu">c</span>(<span class="fl">1.75</span>,<span class="fl">0.5</span>,<span class="dv">0</span>),<span class="at">mai=</span><span class="fu">c</span>(<span class="fl">0.4</span>,<span class="fl">0.4</span>,<span class="fl">0.1</span>,<span class="fl">0.1</span>))</span>
+<span id="cb60-2"><a href="#cb60-2" tabindex="-1"></a><span class="fu">plot</span>(d,<span class="at">type=</span><span class="st">&quot;l&quot;</span>,<span class="at">xlab=</span><span class="st">&quot;MCMC Interation Number s&quot;</span>,</span>
+<span id="cb60-3"><a href="#cb60-3" tabindex="-1"></a>     <span class="at">ylab=</span><span class="st">&quot;Sampled Value of Treatment Effect Parameter&quot;</span>)</span></code></pre></div>
+<p><img role="img" src="data:image/png;base64,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" /><!-- --></p>
+<p>From the plot, the serial correlation does not seem too severe. As
+mentioned earlier though, it’s useful to calculate an <em>effective
+sample size</em> estimate, which is the size of an independent sample
+that contains the same information as contained in our MCMC sample.</p>
+<div class="sourceCode" id="cb61"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" tabindex="-1"></a><span class="fu">library</span>(coda)</span>
+<span id="cb61-2"><a href="#cb61-2" tabindex="-1"></a><span class="fu">effectiveSize</span>(d)</span></code></pre></div>
+<pre><code>##     var1 
+## 207.7105</code></pre>
+<p>The <code>brea_mcmc()</code> function uses a default posterior sample
+size of <span class="math inline">\(S=1,000\)</span>, and this sample
+produced an effective sample size of 207.7105468, meaning our efficiency
+was around 20%. As mentioned earlier, we typically should seek to have
+effective sample sizes over 1,000, and since the MCMC run is already
+very fast, we can increase the chain length to <span class="math inline">\(S=10,000\)</span> (and also increase the initial
+portion of the chain discarded as <em>burn-in</em> to <span class="math inline">\(B=1,000\)</span>):</p>
+<div class="sourceCode" id="cb63"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb63-2"><a href="#cb63-2" tabindex="-1"></a>fit_10k <span class="ot">&lt;-</span> <span class="fu">brea_mcmc</span>(x_brea,y,<span class="at">S=</span><span class="dv">10000</span>,<span class="at">B=</span><span class="dv">1000</span>)</span>
+<span id="cb63-3"><a href="#cb63-3" tabindex="-1"></a>d <span class="ot">&lt;-</span> fit_10k<span class="sc">$</span>b_m_s[[<span class="dv">2</span>]][<span class="dv">1</span>,<span class="dv">2</span>,] <span class="sc">-</span> fit_10k<span class="sc">$</span>b_m_s[[<span class="dv">2</span>]][<span class="dv">1</span>,<span class="dv">1</span>,]</span>
+<span id="cb63-4"><a href="#cb63-4" tabindex="-1"></a><span class="fu">effectiveSize</span>(d)</span></code></pre></div>
+<pre><code>##     var1 
+## 1695.931</code></pre>
+<div class="sourceCode" id="cb65"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" tabindex="-1"></a><span class="fu">mean</span>(d)</span></code></pre></div>
+<pre><code>## [1] 1.847461</code></pre>
+<div class="sourceCode" id="cb67"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" tabindex="-1"></a><span class="fu">median</span>(d)</span></code></pre></div>
+<pre><code>## [1] 1.834604</code></pre>
+<div class="sourceCode" id="cb69"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" tabindex="-1"></a><span class="fu">sd</span>(d)</span></code></pre></div>
+<pre><code>## [1] 0.4576245</code></pre>
+<div class="sourceCode" id="cb71"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" tabindex="-1"></a><span class="fu">exp</span>(<span class="fu">median</span>(d))</span></code></pre></div>
+<pre><code>## [1] 6.262654</code></pre>
+<p>Our effective sample size estimate is now comfortably over 1,000,
+though our estimates are not substantially changed (and are still quite
+close to the corresponding frequentist estimates, as we would
+expect).</p>
+</div>
+<div id="better-step-function-approximation-using-the-gmrf-prior-type" class="section level4">
+<h4>Better Step Function Approximation using the GMRF Prior Type</h4>
+<p>We hypothesized above that our step function approximation of the
+time effect which only used three steps was too crude to adequately
+model the time effect. However, with the frequentist approach, we were
+restrained from including a more fine-grained step function by the
+limited amount of data available. With our Bayesian approach however, we
+can circumvent this restriction by using a prior distribution that
+mathematically “ties together” adjacent steps, which allows us to
+estimate step heights even if there is little to no data directly
+influencing each step height. One such prior distribution is called a
+<em>Gaussian Markov random field (GMRF)</em>, and the <code>brea</code>
+package includes this as a possible prior type.</p>
+<p>First, we will re-group the discrete time variable <span class="math inline">\(t\)</span> into intervals of length 3 instead of
+intervals of length 10:</p>
+<div class="sourceCode" id="cb73"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" tabindex="-1"></a>x_brea[,<span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="fu">cut</span>(expanded_data<span class="sc">$</span>t,<span class="fu">seq</span>(<span class="dv">0</span>,<span class="dv">36</span>,<span class="dv">3</span>),<span class="at">labels=</span><span class="cn">FALSE</span>)</span></code></pre></div>
+<p>Next, we must explicitly set the <code>priors</code> argument of the
+<code>brea_mcmc()</code> function; <code>priors</code> is a list with
+one element for each covariate (column of <code>x</code>). Each element,
+in turn, is a list where the first element specifies the covariate type
+(<code>gmrf</code> for quantitative covariates via GMRF,
+<code>cat</code> for categorical fixed effects, or <code>re</code> for
+random effects). The <code>gmrf</code> option requires two additional
+numerical parameters; specification of these is technical, and we
+recommend values of 3 and 0.01 as a “default” noninformative prior
+specification that should work well in most cases. Similarly, the
+<code>cat</code> option requires one additional numerical parameter, and
+a value of 4 results in a fairly noninformative prior distribution. We
+may now rerun the MCMC as follows:</p>
+<div class="sourceCode" id="cb74"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb74-2"><a href="#cb74-2" tabindex="-1"></a>priors <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="fu">list</span>(<span class="st">&quot;gmrf&quot;</span>,<span class="dv">3</span>,<span class="fl">0.01</span>),<span class="fu">list</span>(<span class="st">&quot;cat&quot;</span>,<span class="dv">4</span>))</span>
+<span id="cb74-3"><a href="#cb74-3" tabindex="-1"></a>fit_gmrf <span class="ot">&lt;-</span> <span class="fu">brea_mcmc</span>(x_brea,y,priors,<span class="at">S=</span><span class="dv">10000</span>,<span class="at">B=</span><span class="dv">1000</span>)</span>
+<span id="cb74-4"><a href="#cb74-4" tabindex="-1"></a>d_gmrf <span class="ot">&lt;-</span> fit_gmrf<span class="sc">$</span>b_m_s[[<span class="dv">2</span>]][<span class="dv">1</span>,<span class="dv">2</span>,] <span class="sc">-</span> fit_gmrf<span class="sc">$</span>b_m_s[[<span class="dv">2</span>]][<span class="dv">1</span>,<span class="dv">1</span>,]</span>
+<span id="cb74-5"><a href="#cb74-5" tabindex="-1"></a><span class="fu">effectiveSize</span>(d_gmrf)</span></code></pre></div>
+<pre><code>##     var1 
+## 2058.032</code></pre>
+<p>The effective sample for this MCMC run is once again well over 1,000,
+so we may now proceed to giving practical inferences.</p>
+</div>
+<div id="inferences" class="section level4">
+<h4>Inferences</h4>
+<p>The posterior mean, median, and standard deviation (standard error)
+of the treatment effect parameter on the linear predictor scale are as
+follows:</p>
+<div class="sourceCode" id="cb76"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" tabindex="-1"></a><span class="fu">mean</span>(d_gmrf)</span></code></pre></div>
+<pre><code>## [1] 1.674498</code></pre>
+<div class="sourceCode" id="cb78"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" tabindex="-1"></a><span class="fu">median</span>(d_gmrf)</span></code></pre></div>
+<pre><code>## [1] 1.669348</code></pre>
+<div class="sourceCode" id="cb80"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" tabindex="-1"></a><span class="fu">sd</span>(d_gmrf)</span></code></pre></div>
+<pre><code>## [1] 0.4155349</code></pre>
+<p>Exponentiating, we find the following hazard ratio estimate:</p>
+<div class="sourceCode" id="cb82"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" tabindex="-1"></a><span class="fu">median</span>(<span class="fu">exp</span>(d_gmrf))</span></code></pre></div>
+<pre><code>## [1] 5.308705</code></pre>
+<p>We estimate the hazard of cancer remission cessation is 5.31 times
+lower for patients receiving 6-MP compared to patients receiving
+placebo. We may also calculate a 95% CI for the hazard rate ratio by
+calculating the <span class="math inline">\(2.5^\text{th}\)</span> and
+<span class="math inline">\(97.5^\text{th}\)</span> percentile of the
+posterior sample of exponentiated treatment effect parameters:</p>
+<div class="sourceCode" id="cb84"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" tabindex="-1"></a><span class="fu">quantile</span>(<span class="fu">exp</span>(d_gmrf),<span class="fu">c</span>(<span class="fl">0.025</span>,<span class="fl">0.975</span>))</span></code></pre></div>
+<pre><code>##      2.5%     97.5% 
+##  2.412046 12.557243</code></pre>
+<p>Hence, based on these results, we are 95% confident that 6-MP
+treatment reduces the hazard of remission ending by a factor of between
+2.41 and 12.56.</p>
+</div>
+<div id="comparison-with-other-approaches" class="section level4">
+<h4>Comparison with Other Approaches</h4>
+<p>We have obtained inferential results from a total of nine different
+model fits to the leukemia remission data from <span class="citation">(<a href="#ref-cox1972">Cox 1972</a>)</span>. First, we
+fit a classic frequentist continuous time Cox proportional hazards model
+with three different options for the handling of tied observations (the
+Efron, Breslow, and exact methods). Second, we fit a frequentist
+discrete time Cox model with four different ways of modeling the effect
+of discrete time <span class="math inline">\(t\)</span>: linear,
+quadratic, and cubic polynomials, and a step function with three steps.
+Finally, we obtained inferences from a Bayesian discrete time Cox model
+using the <code>brea</code> package with two different time effect
+formulations: a step function with 3 steps and a step function with 12
+steps (the latter case using a GMRF prior distribution for the step
+heights).</p>
+<p>For all nine of these model fits, we obtained point estimates and
+standard errors of the treatment effect parameter on the linear
+predictor scale. We also obtained corresponding hazard rate ratio
+estimates comparing the rate of remission cessation in the placebo
+control group to the rate in the 6-MP treatment group. These results are
+summarized in the table below:</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Point Estimate</th>
+<th>Standard Error</th>
+<th>Hazard Ratio Estimate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Continuos CPH - Efron Ties</td>
+<td>1.57</td>
+<td>0.41</td>
+<td>4.82</td>
+</tr>
+<tr>
+<td>Continous CPH - Breslow Ties</td>
+<td>1.51</td>
+<td>0.41</td>
+<td>4.52</td>
+</tr>
+<tr>
+<td>Continous CPH - Exact Ties</td>
+<td>1.63</td>
+<td>0.43</td>
+<td>5.09</td>
+</tr>
+<tr>
+<td>Discrete CPH - Linear Time</td>
+<td>1.77</td>
+<td>0.44</td>
+<td>5.89</td>
+</tr>
+<tr>
+<td>Discrete CPH - Quadratic Time</td>
+<td>1.71</td>
+<td>0.43</td>
+<td>5.55</td>
+</tr>
+<tr>
+<td>Discrete CPH - Cubic Time</td>
+<td>1.71</td>
+<td>0.43</td>
+<td>5.53</td>
+</tr>
+<tr>
+<td>Discrete CPH - 3-Step Time</td>
+<td>1.84</td>
+<td>0.45</td>
+<td>6.28</td>
+</tr>
+<tr>
+<td><code>brea</code> - 3-Step Time</td>
+<td>1.83</td>
+<td>0.46</td>
+<td>6.26</td>
+</tr>
+<tr>
+<td><code>brea</code> - 12-Step Time</td>
+<td>1.67</td>
+<td>0.42</td>
+<td>5.31</td>
+</tr>
+</tbody>
+</table>
+<p>While the results of all nine model fits were qualitatively similar,
+there were clear patterns regarding which results were most similar to
+others. For example, the frequentist and Bayesian discrete time Cox
+models the 3-step formulation for the time effect yielded almost
+identical results, which makes sense considering these are essentially
+the same model but fit in drastically different ways.</p>
+<p>In addition, the continuous time Cox model fit with the
+<em>exact</em> method of handling ties performed quite similarly to the
+<code>brea</code> model with a flexible (12-step) formulation for the
+baseline hazard function. Again, this makes sense, as the models are
+quite similar, with the main difference being that we expect the log
+<em>odds ratio</em> estimate for the <code>brea</code> model (1.67) to
+be slightly further from the null value of 0 than a corresponding log
+<em>hazard ratio</em> from the continuous CPH model (1.63), which is
+what was observed.</p>
+</div>
+</div>
+</div>
+<div id="references" class="section level2 unnumbered">
+<h2 class="unnumbered">References</h2>
+<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
+<div id="ref-allison1982" class="csl-entry">
+Allison, Paul D. 1982. <span>“Discrete-Time Methods for the Analysis of
+Event Histories.”</span> <em>Sociological Methodology</em> 13: 61–98.
+</div>
+<div id="ref-cox1972" class="csl-entry">
+Cox, D. R. 1972. <span>“Regression Models and Life-Tables.”</span>
+<em>Journal of the Royal Statistical Society, Series B</em> 34 (2):
+187–220.
+</div>
+<div id="ref-gelmanetal2013" class="csl-entry">
+Gelman, A., J. B. Carlin, H. S. Stern, D. B. Dunson, A. Vehtari, and D.
+B. Rubin. 2013. <em>Bayesian Data Analysis, Third Edition</em>. Chapman
+&amp; Hall/CRC Texts in Statistical Science. Taylor &amp; Francis.
+</div>
+<div id="ref-kingweiss2021" class="csl-entry">
+King, Adam J, and Robert E Weiss. 2021. <span>“A General Semiparametric
+<span>B</span>ayesian Discrete-Time Recurrent Events Model.”</span>
+<em>Biostatistics</em> 22 (2): 266–82. <a href="https://doi.org/10.1093/biostatistics/kxz029">https://doi.org/10.1093/biostatistics/kxz029</a>.
+</div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
