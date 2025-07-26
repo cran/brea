@@ -9,7 +9,8 @@ This function performs Metropolis-Hastings exploration of the posterior distribu
 }
 
 \usage{
-brea_mcmc(x, y, priors = NULL, S = 1000, B = 100, n = NULL, K = NULL, store_re = FALSE)
+brea_mcmc(x, y, priors = NULL, S = 1000, B = 100, n = NULL, K = NULL,
+store_re = FALSE, block_mh = TRUE)
 }
 
 \arguments{
@@ -21,6 +22,7 @@ brea_mcmc(x, y, priors = NULL, S = 1000, B = 100, n = NULL, K = NULL, store_re =
   \item{n}{a vector of positive whole numbers with length equal to the number of person-time observations; the i^th entry of \code{n} is the number of replicated observations that observation i represents (defaults to 1 for each observation if \code{NULL} is supplied)}
   \item{K}{a positive whole number vector whose m^th entry is the number of distinct values that the m^th discretized predictor may assume; if \code{NULL} is supplied, this vector will be automatically determined from \code{x}}
   \item{store_re}{if \code{TRUE}, the random effects are stored from each post-burn-in MCMC iteration, and if \code{FALSE} they are not stored}
+  \item{block_mh}{if \code{TRUE}, a block Metropolis-Hastings algorithm will be used to update parameters for quantitative covariates using the \code{gmrf} prior type; otherwise, single-site random walk Metropolis updates will be used}
 }
 
 \details{

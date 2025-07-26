@@ -12,7 +12,7 @@
 
 <meta name="author" content="Adam King" />
 
-<meta name="date" content="2024-07-22" />
+<meta name="date" content="2025-07-26" />
 
 <title>Introduction to brea</title>
 
@@ -363,7 +363,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">Introduction to brea</h1>
 <h4 class="author">Adam King</h4>
-<h4 class="date">2024-07-22</h4>
+<h4 class="date">2025-07-26</h4>
 
 
 
@@ -1177,7 +1177,7 @@ with both the frequentist continuous and discrete time Cox models.</p>
 <h4>Setting Up an MCMC Run</h4>
 <p>The <code>brea_mcmc()</code> function has the following function
 signature:</p>
-<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" tabindex="-1"></a><span class="fu">brea_mcmc</span>(x, y, <span class="at">priors =</span> <span class="cn">NULL</span>, <span class="at">S =</span> <span class="dv">1000</span>, <span class="at">B =</span> <span class="dv">100</span>, <span class="at">n =</span> <span class="cn">NULL</span>, <span class="at">K =</span> <span class="cn">NULL</span>, <span class="at">store_re =</span> <span class="cn">FALSE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" tabindex="-1"></a><span class="fu">brea_mcmc</span>(x, y, <span class="at">priors =</span> <span class="cn">NULL</span>, <span class="at">S =</span> <span class="dv">1000</span>, <span class="at">B =</span> <span class="dv">100</span>, <span class="at">n =</span> <span class="cn">NULL</span>, <span class="at">K =</span> <span class="cn">NULL</span>, <span class="at">store_re =</span> <span class="cn">FALSE</span>,  <span class="at">block_mh =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
 <p>The only required arguments the user must specify are <code>x</code>
 and <code>y</code>, which specify, respectively, the predictor values
 and event occurrence status for each person-time observation of the
@@ -1383,7 +1383,7 @@ may now rerun the MCMC as follows:</p>
 <span id="cb74-4"><a href="#cb74-4" tabindex="-1"></a>d_gmrf <span class="ot">&lt;-</span> fit_gmrf<span class="sc">$</span>b_m_s[[<span class="dv">2</span>]][<span class="dv">1</span>,<span class="dv">2</span>,] <span class="sc">-</span> fit_gmrf<span class="sc">$</span>b_m_s[[<span class="dv">2</span>]][<span class="dv">1</span>,<span class="dv">1</span>,]</span>
 <span id="cb74-5"><a href="#cb74-5" tabindex="-1"></a><span class="fu">effectiveSize</span>(d_gmrf)</span></code></pre></div>
 <pre><code>##     var1 
-## 2058.032</code></pre>
+## 2254.651</code></pre>
 <p>The effective sample for this MCMC run is once again well over 1,000,
 so we may now proceed to giving practical inferences.</p>
 </div>
@@ -1393,14 +1393,14 @@ so we may now proceed to giving practical inferences.</p>
 of the treatment effect parameter on the linear predictor scale are as
 follows:</p>
 <div class="sourceCode" id="cb76"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" tabindex="-1"></a><span class="fu">mean</span>(d_gmrf)</span></code></pre></div>
-<pre><code>## [1] 1.674498</code></pre>
+<pre><code>## [1] 1.667937</code></pre>
 <div class="sourceCode" id="cb78"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" tabindex="-1"></a><span class="fu">median</span>(d_gmrf)</span></code></pre></div>
-<pre><code>## [1] 1.669348</code></pre>
+<pre><code>## [1] 1.654067</code></pre>
 <div class="sourceCode" id="cb80"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" tabindex="-1"></a><span class="fu">sd</span>(d_gmrf)</span></code></pre></div>
-<pre><code>## [1] 0.4155349</code></pre>
+<pre><code>## [1] 0.4164883</code></pre>
 <p>Exponentiating, we find the following hazard ratio estimate:</p>
 <div class="sourceCode" id="cb82"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" tabindex="-1"></a><span class="fu">median</span>(<span class="fu">exp</span>(d_gmrf))</span></code></pre></div>
-<pre><code>## [1] 5.308705</code></pre>
+<pre><code>## [1] 5.2282</code></pre>
 <p>We estimate the hazard of cancer remission cessation is 5.31 times
 lower for patients receiving 6-MP compared to patients receiving
 placebo. We may also calculate a 95% CI for the hazard rate ratio by
@@ -1409,7 +1409,7 @@ calculating the <span class="math inline">\(2.5^\text{th}\)</span> and
 posterior sample of exponentiated treatment effect parameters:</p>
 <div class="sourceCode" id="cb84"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" tabindex="-1"></a><span class="fu">quantile</span>(<span class="fu">exp</span>(d_gmrf),<span class="fu">c</span>(<span class="fl">0.025</span>,<span class="fl">0.975</span>))</span></code></pre></div>
 <pre><code>##      2.5%     97.5% 
-##  2.412046 12.557243</code></pre>
+##  2.419498 12.229117</code></pre>
 <p>Hence, based on these results, we are 95% confident that 6-MP
 treatment reduces the hazard of remission ending by a factor of between
 2.41 and 12.56.</p>

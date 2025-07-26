@@ -92,7 +92,7 @@ confint(step_fit)
 exp(confint(step_fit)["treat",])
 
 ## ----eval=FALSE---------------------------------------------------------------
-#  brea_mcmc(x, y, priors = NULL, S = 1000, B = 100, n = NULL, K = NULL, store_re = FALSE)
+#  brea_mcmc(x, y, priors = NULL, S = 1000, B = 100, n = NULL, K = NULL, store_re = FALSE,  block_mh = TRUE)
 
 ## -----------------------------------------------------------------------------
 x_brea <- matrix(0,N,2)

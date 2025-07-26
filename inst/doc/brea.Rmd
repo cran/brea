@@ -1,7 +1,7 @@
 ---
 title: "Introduction to brea"
 author: "Adam King"
-date: "2024-07-22"
+date: "2025-07-26"
 bibliography: brea.bib
 link-citations: TRUE
 output: rmarkdown::html_vignette
@@ -317,7 +317,7 @@ The function `brea_mcmc()` from the `brea` package is used to fit a Bayesian ver
 The `brea_mcmc()` function has the following function signature:
 
 ```{r, eval=FALSE}
-brea_mcmc(x, y, priors = NULL, S = 1000, B = 100, n = NULL, K = NULL, store_re = FALSE)
+brea_mcmc(x, y, priors = NULL, S = 1000, B = 100, n = NULL, K = NULL, store_re = FALSE,  block_mh = TRUE)
 ```
 
 The only required arguments the user must specify are `x` and `y`, which specify, respectively, the predictor values and event occurrence status for each person-time observation of the expanded data set. More specifically, `y` is a vector of length `N` or a matrix of height `N` with a single column (or with multiple columns if there are competing risks), where `N` is the number of person-time observations. Each entry of `y` is either 0 (if the event of interest did not occur at that person-time observation) or 1 (if the event of interest did occur). The `y` variable we created earlier meets these requirements without further modification.
